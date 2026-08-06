@@ -1,4 +1,4 @@
-modules = ["python-3.12", "web", "postgresql-16"]
+modules = ["python-3.12", "web"]
 [nix]
 channel = "stable-25_05"
 packages = ["file", "fontconfig", "freetype", "ghostscript", "glib", "harfbuzz", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pango", "tcl", "tk", "zlib"]
