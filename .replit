@@ -1,7 +1,7 @@
 modules = ["python-3.12", "web", "postgresql-16"]
 [nix]
 channel = "stable-25_05"
-packages = ["file", "fontconfig", "freetype", "ghostscript", "glib", "harfbuzz", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pango", "tcl", "tk", "zlib"]
+packages = ["cargo", "file", "fontconfig", "freetype", "ghostscript", "glib", "harfbuzz", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pango", "rustc", "tcl", "tk", "zlib"]
 
 [agent]
 expertMode = true
