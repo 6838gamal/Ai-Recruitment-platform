@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     # Allow SESSION_SECRET (Replit-provisioned) as an alias for SECRET_KEY
     #SESSION_SECRET: Optional[str] = None
 
-    SECRET_KEY: str = Field(validation_alias="SECRET_KEY")
+    SECRET_KEY: str = Field(default=_PLACEHOLDER_KEY, validation_alias="SECRET_KEY")
     SESSION_SECRET: Optional[str] = Field(default=None, validation_alias="SESSION_SECRET")
     ALLOWED_HOSTS: str = "*"
 
