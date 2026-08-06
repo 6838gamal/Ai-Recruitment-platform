@@ -132,6 +132,22 @@ async def health_check():
     return {"status": "ok", "app": settings.APP_NAME, "env": settings.APP_ENV}
 
 
+# ─── Register all models so SQLAlchemy can resolve string-based relationships ──
+# Must be imported before any query runs, regardless of which router is used.
+# Use `from … import models as _*` to avoid shadowing the `app` FastAPI instance.
+from app.modules.accounts import models as _accounts_models          # noqa: F401
+from app.modules.users import models as _users_models                # noqa: F401
+from app.modules.companies import models as _companies_models        # noqa: F401
+from app.modules.jobs import models as _jobs_models                  # noqa: F401
+from app.modules.candidates import models as _candidates_models      # noqa: F401
+from app.modules.ats import models as _ats_models                    # noqa: F401
+from app.modules.interviews import models as _interviews_models      # noqa: F401
+from app.modules.billing import models as _billing_models            # noqa: F401
+from app.modules.crm import models as _crm_models                    # noqa: F401
+from app.modules.notifications import models as _notifications_models  # noqa: F401
+from app.modules.audit import models as _audit_models                # noqa: F401
+from app.modules.files import models as _files_models                # noqa: F401
+
 # ─── Module Routers ───────────────────────────────────────────────────────────
 
 from app.modules.accounts.routes import router as auth_router
