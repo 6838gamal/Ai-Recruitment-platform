@@ -10,6 +10,17 @@ router = APIRouter(prefix="/ats", tags=["ATS"])
 templates = Jinja2Templates(directory="app/templates")
 
 
+@router.get("/", response_class=HTMLResponse, name="ats:index")
+async def index(
+    request: Request,
+    current_user=Depends(require_permission(Permission.VIEW_JOBS)),
+):
+    """ATS index — list of job pipelines."""
+    return templates.TemplateResponse(request, "ats/index.html", {
+        "current_user": current_user,
+    })
+
+
 @router.get("/{job_id}", response_class=HTMLResponse, name="ats:pipeline")
 async def pipeline(
     request: Request,
