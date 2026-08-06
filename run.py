@@ -1,0 +1,13 @@
+"""Application entry point for development and production."""
+import uvicorn
+from app.config import settings
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=5000,
+        reload=settings.is_development,
+        log_level="info",
+        access_log=True,
+    )
