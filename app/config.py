@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field 
 
 _PLACEHOLDER_KEY = "change-me-in-production-use-64-random-hex-chars"
 
@@ -22,9 +23,12 @@ class Settings(BaseSettings):
     APP_NAME: str = "AI Recruitment Platform"
     APP_ENV: str = "development"  # development | staging | production
     DEBUG: bool = True
-    SECRET_KEY: str = _PLACEHOLDER_KEY
+    #SECRET_KEY: str = _PLACEHOLDER_KEY
     # Allow SESSION_SECRET (Replit-provisioned) as an alias for SECRET_KEY
-    SESSION_SECRET: Optional[str] = None
+    #SESSION_SECRET: Optional[str] = None
+
+    SECRET_KEY: str = Field(validation_alias="SECRET_KEY")
+    SESSION_SECRET: Optional[str] = Field(default=None, validation_alias="SESSION_SECRET")
     ALLOWED_HOSTS: str = "*"
 
     @model_validator(mode="after")
