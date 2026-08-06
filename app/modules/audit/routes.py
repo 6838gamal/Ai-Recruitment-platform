@@ -15,6 +15,6 @@ async def audit_logs(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_AUDIT_LOGS)),
 ):
-    return templates.TemplateResponse("audit/list.html", {
-        "request": request, "current_user": current_user, "logs": []
+    return templates.TemplateResponse(request, "audit/list.html", {
+        "current_user": current_user, "logs": []
     })

@@ -15,6 +15,6 @@ async def settings_index(
     request: Request,
     current_user=Depends(require_permission(Permission.MANAGE_SETTINGS)),
 ):
-    return templates.TemplateResponse("settings/index.html", {
-        "request": request, "current_user": current_user
+    return templates.TemplateResponse(request, "settings/index.html", {
+        "current_user": current_user
     })

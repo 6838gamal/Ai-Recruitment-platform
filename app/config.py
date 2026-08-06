@@ -2,8 +2,10 @@
 from functools import lru_cache
 from typing import List, Optional
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_PLACEHOLDER_KEY = "change-me-in-production-use-64-random-hex-chars"
 
 
 class Settings(BaseSettings):
@@ -20,8 +22,22 @@ class Settings(BaseSettings):
     APP_NAME: str = "AI Recruitment Platform"
     APP_ENV: str = "development"  # development | staging | production
     DEBUG: bool = True
-    SECRET_KEY: str = "change-me-in-production-use-64-random-hex-chars"
+    SECRET_KEY: str = _PLACEHOLDER_KEY
+    # Allow SESSION_SECRET (Replit-provisioned) as an alias for SECRET_KEY
+    SESSION_SECRET: Optional[str] = None
     ALLOWED_HOSTS: str = "*"
+
+    @model_validator(mode="after")
+    def resolve_secret_key(self) -> "Settings":
+        """Use SESSION_SECRET as SECRET_KEY when SECRET_KEY is unset/placeholder."""
+        if self.SECRET_KEY == _PLACEHOLDER_KEY and self.SESSION_SECRET:
+            self.SECRET_KEY = self.SESSION_SECRET
+        if self.SECRET_KEY == _PLACEHOLDER_KEY and self.APP_ENV != "development":
+            raise ValueError(
+                "SECRET_KEY must be set to a secure random value outside development. "
+                "Set SECRET_KEY or SESSION_SECRET in your environment/secrets."
+            )
+        return self
 
     # ─── Database ────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql://localhost/ai_recruitment"

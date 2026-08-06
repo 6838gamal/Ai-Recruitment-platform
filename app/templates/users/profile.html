@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Profile — AI Recruitment Platform{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block content %}
+<div class="p-6 max-w-2xl">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    <div class="flex items-center gap-4 mb-6">
+      <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">
+        {{ profile.first_name[0] }}{{ profile.last_name[0] }}
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.full_name }}</h2>
+        <p class="text-gray-500 dark:text-gray-400 capitalize">{{ profile.role.replace('_', ' ') }}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+      <div><span class="text-gray-500">Email:</span> <span class="font-medium text-gray-900 dark:text-white ml-2">{{ profile.email }}</span></div>
+      <div><span class="text-gray-500">Status:</span> <span class="font-medium text-gray-900 dark:text-white ml-2">{{ profile.status }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

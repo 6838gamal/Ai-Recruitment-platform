@@ -14,6 +14,6 @@ async def notification_list(
     request: Request,
     current_user=Depends(get_current_user_profile),
 ):
-    return templates.TemplateResponse("notifications/list.html", {
-        "request": request, "current_user": current_user, "notifications": []
+    return templates.TemplateResponse(request, "notifications/list.html", {
+        "current_user": current_user, "notifications": []
     })

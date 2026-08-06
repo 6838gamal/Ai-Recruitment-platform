@@ -16,8 +16,8 @@ async def parser_index(
     request: Request,
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
-    return templates.TemplateResponse("resume_parser/index.html", {
-        "request": request, "current_user": current_user
+    return templates.TemplateResponse(request, "resume_parser/index.html", {
+        "current_user": current_user
     })
 
 

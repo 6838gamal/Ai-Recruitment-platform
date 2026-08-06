@@ -15,6 +15,6 @@ async def ai_matching_index(
     request: Request,
     current_user=Depends(require_permission(Permission.USE_AI_MATCHING)),
 ):
-    return templates.TemplateResponse("ai_matching/index.html", {
-        "request": request, "current_user": current_user
+    return templates.TemplateResponse(request, "ai_matching/index.html", {
+        "current_user": current_user
     })

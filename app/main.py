@@ -105,14 +105,14 @@ async def not_found_handler(request: Request, exc: HTTPException):
     if request.url.path.startswith("/api/"):
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=404, content={"success": False, "error": {"message": "Not found"}})
-    return templates.TemplateResponse("errors/404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse(request, "errors/404.html", {}, status_code=404)
 
 
 @app.exception_handler(500)
 async def server_error_handler(request: Request, exc: Exception):
     if settings.DEBUG:
         raise exc
-    return templates.TemplateResponse("errors/500.html", {"request": request}, status_code=500)
+    return templates.TemplateResponse(request, "errors/500.html", {}, status_code=500)
 
 
 # ─── Root Redirect ────────────────────────────────────────────────────────────

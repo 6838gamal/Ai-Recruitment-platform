@@ -18,6 +18,6 @@ async def company_list(
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.VIEW_COMPANIES)),
 ):
-    return templates.TemplateResponse("companies/list.html", {
-        "request": request, "current_user": current_user
+    return templates.TemplateResponse(request, "companies/list.html", {
+        "current_user": current_user
     })

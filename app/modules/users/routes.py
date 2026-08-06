@@ -29,8 +29,7 @@ async def user_list(
         page=page,
         per_page=25,
     )
-    return templates.TemplateResponse("users/list.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "users/list.html", {
         "users": users,
         "total": total,
         "page": page,
@@ -44,8 +43,7 @@ async def my_profile(
     current_user=Depends(get_current_user_profile),
 ):
     """Current user's profile page."""
-    return templates.TemplateResponse("users/profile.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "users/profile.html", {
         "profile": current_user,
         "current_user": current_user,
     })

@@ -15,6 +15,6 @@ async def invoice_list(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_BILLING)),
 ):
-    return templates.TemplateResponse("billing/list.html", {
-        "request": request, "current_user": current_user, "invoices": []
+    return templates.TemplateResponse(request, "billing/list.html", {
+        "current_user": current_user, "invoices": []
     })

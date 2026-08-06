@@ -15,6 +15,6 @@ async def client_list(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_COMPANIES)),
 ):
-    return templates.TemplateResponse("crm/list.html", {
-        "request": request, "current_user": current_user, "clients": []
+    return templates.TemplateResponse(request, "crm/list.html", {
+        "current_user": current_user, "clients": []
     })

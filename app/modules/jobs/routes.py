@@ -18,6 +18,6 @@ async def job_list(
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.VIEW_JOBS)),
 ):
-    return templates.TemplateResponse("jobs/list.html", {
-        "request": request, "current_user": current_user, "jobs": []
+    return templates.TemplateResponse(request, "jobs/list.html", {
+        "current_user": current_user, "jobs": []
     })

@@ -16,6 +16,6 @@ async def pipeline(
     job_id: str,
     current_user=Depends(require_permission(Permission.VIEW_JOBS)),
 ):
-    return templates.TemplateResponse("ats/pipeline.html", {
-        "request": request, "current_user": current_user, "job_id": job_id
+    return templates.TemplateResponse(request, "ats/pipeline.html", {
+        "current_user": current_user, "job_id": job_id
     })

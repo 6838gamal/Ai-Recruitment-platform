@@ -64,7 +64,7 @@ async def login_page(request: Request):
     token = request.cookies.get("access_token")
     if token:
         return RedirectResponse(url="/dashboard", status_code=302)
-    return templates.TemplateResponse("auth/login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "auth/login.html", {"error": None})
 
 
 @router.post("/login", name="auth:login")
@@ -83,8 +83,8 @@ async def login(
         access_token, refresh_token, user = service.login(login_data, request=request)
     except (AuthenticationError, AccountLockedError) as e:
         return templates.TemplateResponse(
-            "auth/login.html",
-            {"request": request, "error": str(e)},
+            request, "auth/login.html",
+            {"error": str(e)},
             status_code=400,
         )
 
@@ -114,8 +114,8 @@ async def logout(request: Request, db: Session = Depends(get_db)):
 async def forgot_password_page(request: Request):
     """Render the forgot password page."""
     return templates.TemplateResponse(
-        "auth/forgot_password.html",
-        {"request": request, "submitted": False, "error": None},
+        request, "auth/forgot_password.html",
+        {"submitted": False, "error": None},
     )
 
 
@@ -135,8 +135,8 @@ async def forgot_password(
         pass  # Silent fail for security
 
     return templates.TemplateResponse(
-        "auth/forgot_password.html",
-        {"request": request, "submitted": True, "error": None},
+        request, "auth/forgot_password.html",
+        {"submitted": True, "error": None},
     )
 
 
@@ -148,8 +148,8 @@ async def reset_password_page(request: Request, token: str = ""):
     if not token:
         return RedirectResponse(url="/auth/forgot-password", status_code=302)
     return templates.TemplateResponse(
-        "auth/reset_password.html",
-        {"request": request, "token": token, "error": None, "success": False},
+        request, "auth/reset_password.html",
+        {"token": token, "error": None, "success": False},
     )
 
 
@@ -172,20 +172,20 @@ async def reset_password(
         service.reset_password(data)
     except (InvalidTokenError, ValidationError) as e:
         return templates.TemplateResponse(
-            "auth/reset_password.html",
-            {"request": request, "token": token, "error": str(e), "success": False},
+            request, "auth/reset_password.html",
+            {"token": token, "error": str(e), "success": False},
             status_code=400,
         )
     except Exception as e:
         return templates.TemplateResponse(
-            "auth/reset_password.html",
-            {"request": request, "token": token, "error": "An error occurred. Please try again.", "success": False},
+            request, "auth/reset_password.html",
+            {"token": token, "error": "An error occurred. Please try again.", "success": False},
             status_code=400,
         )
 
     return templates.TemplateResponse(
-        "auth/reset_password.html",
-        {"request": request, "token": token, "error": None, "success": True},
+        request, "auth/reset_password.html",
+        {"token": token, "error": None, "success": True},
     )
 
 

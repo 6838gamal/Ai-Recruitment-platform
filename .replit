@@ -1,6 +1,54 @@
-modules = ["python-3.12", "web"]
+modules = ["python-3.12", "web", "postgresql-16"]
 [nix]
 channel = "stable-25_05"
+packages = ["file", "fontconfig", "freetype", "ghostscript", "glib", "harfbuzz", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pango", "tcl", "tk", "zlib"]
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+AI_MODEL = "gpt-4o-mini"
+AI_PROVIDER = "openai"
+ALLOWED_HOSTS = "*"
+APP_ENV = "development"
+APP_NAME = "AI Recruitment Platform"
+CORS_ORIGINS = "*"
+DEBUG = "true"
+DEFAULT_PAGE_SIZE = "25"
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = "30"
+JWT_ALGORITHM = "HS256"
+JWT_REFRESH_TOKEN_EXPIRE_DAYS = "7"
+LOCAL_UPLOAD_DIR = "./uploads"
+MAX_PAGE_SIZE = "100"
+MAX_UPLOAD_SIZE_MB = "10"
+STORAGE_BACKEND = "local"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80

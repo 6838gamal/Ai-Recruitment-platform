@@ -16,6 +16,6 @@ async def candidate_list(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_CANDIDATES)),
 ):
-    return templates.TemplateResponse("candidates/list.html", {
-        "request": request, "current_user": current_user, "candidates": []
+    return templates.TemplateResponse(request, "candidates/list.html", {
+        "current_user": current_user, "candidates": []
     })

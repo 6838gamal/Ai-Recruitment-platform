@@ -15,6 +15,6 @@ async def interview_list(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_INTERVIEWS)),
 ):
-    return templates.TemplateResponse("interviews/list.html", {
-        "request": request, "current_user": current_user, "interviews": []
+    return templates.TemplateResponse(request, "interviews/list.html", {
+        "current_user": current_user, "interviews": []
     })

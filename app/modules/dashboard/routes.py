@@ -22,8 +22,7 @@ async def dashboard(
     service = DashboardService(db)
     stats = service.get_stats(current_user.company_id)
 
-    return templates.TemplateResponse("dashboard/index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "dashboard/index.html", {
         "current_user": current_user,
         "stats": stats,
     })

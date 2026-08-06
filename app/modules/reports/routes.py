@@ -15,6 +15,6 @@ async def reports_index(
     request: Request,
     current_user=Depends(require_permission(Permission.VIEW_REPORTS)),
 ):
-    return templates.TemplateResponse("reports/index.html", {
-        "request": request, "current_user": current_user
+    return templates.TemplateResponse(request, "reports/index.html", {
+        "current_user": current_user
     })
