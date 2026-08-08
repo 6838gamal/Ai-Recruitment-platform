@@ -44,7 +44,7 @@ class Settings(BaseSettings):
         return self
 
     # ─── Database ────────────────────────────────────────────────────
-    DATABASE_URL: str = "postgresql://localhost/ai_recruitment"
+    DATABASE_URL: str = "postgresql://gamalalmaqtary:mfpNMrFTCQlurkpwuCXj88w3A042Z7hc@dpg-d9reg07avr4c7392ub3g-a.virginia-postgres.render.com/ai_recruitment_platform_db"
 
     # ─── JWT / Security ──────────────────────────────────────────────
     JWT_ALGORITHM: str = "HS256"
