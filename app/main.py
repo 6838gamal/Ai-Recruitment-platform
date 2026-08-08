@@ -1,4 +1,3 @@
-```python
 """
 AI Recruitment Platform — FastAPI Application Entry Point.
 
@@ -245,4 +244,3 @@ app.include_router(reports_router)
 app.include_router(files_router)
 app.include_router(audit_router)
 app.include_router(settings_router)
-```
