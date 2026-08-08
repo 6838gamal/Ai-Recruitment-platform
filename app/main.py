@@ -1,15 +1,17 @@
+```python
 """
 AI Recruitment Platform — FastAPI Application Entry Point.
 
 Modular Monolith architecture: one application, 17 internal modules.
 """
+
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -19,24 +21,20 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
 from app.core.exceptions import AppException
-from app.middleware import RequestTimingMiddleware, SecurityHeadersMiddleware
+from app.middleware import (
+    RequestTimingMiddleware,
+    SecurityHeadersMiddleware,
+)
 
-# ─── Rate Limiter ─────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
 
-# ─── Lifespan ─────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan events."""
-    # Create upload directories
-    os.makedirs(settings.LOCAL_UPLOAD_DIR, exist_ok=True)
 
-    # Ensure database tables exist (for development convenience)
-    # Migrations are managed by Alembic
-    from app.database import engine, Base
-    # Only auto-create in development if tables don't exist
-    # In production, always use: alembic upgrade head
+    os.makedirs(settings.LOCAL_UPLOAD_DIR, exist_ok=True)
+    os.makedirs("static", exist_ok=True)
 
     print(f"🚀 {settings.APP_NAME} starting up...")
     print(f"   Environment: {settings.APP_ENV}")
@@ -47,7 +45,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     print("👋 Application shutting down...")
 
 
-# ─── FastAPI Application ───────────────────────────────────────────────────────
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI-powered recruitment and HR management platform",
@@ -58,12 +55,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ─── Middleware ────────────────────────────────────────────────────────────────
+
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
+)
+
 
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestTimingMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -71,84 +74,140 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
 )
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SECRET_KEY,
 )
 
-# ─── Static Files ─────────────────────────────────────────────────────────────
+
 os.makedirs("static", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# ─── Templates ────────────────────────────────────────────────────────────────
-templates = Jinja2Templates(directory="app/templates")
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static",
+)
 
-# ─── Exception Handlers ───────────────────────────────────────────────────────
+
+templates = Jinja2Templates(
+    directory="app/templates"
+)
+
 
 @app.exception_handler(AppException)
-async def app_exception_handler(request: Request, exc: AppException):
-    """Handle domain exceptions."""
-    from fastapi.responses import JSONResponse
+async def app_exception_handler(
+    request: Request,
+    exc: AppException,
+):
+    """Handle application/domain exceptions."""
+
     if request.headers.get("HX-Request"):
         return HTMLResponse(
-            content=f'<div class="alert alert-error">{exc.message}</div>',
+            content=exc.message,
             status_code=exc.status_code,
         )
+
     return JSONResponse(
         status_code=exc.status_code,
-        content={"success": False, "error": {"code": exc.code, "message": exc.message}},
+        content={
+            "success": False,
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+            },
+        },
     )
 
 
 @app.exception_handler(404)
-async def not_found_handler(request: Request, exc: HTTPException):
+async def not_found_handler(
+    request: Request,
+    exc: HTTPException,
+):
+    """Handle 404 errors."""
+
     if request.url.path.startswith("/api/"):
-        from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=404, content={"success": False, "error": {"message": "Not found"}})
-    return templates.TemplateResponse(request, "errors/404.html", {}, status_code=404)
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "error": {
+                    "message": "Not found",
+                },
+            },
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "errors/404.html",
+        {},
+        status_code=404,
+    )
 
 
 @app.exception_handler(500)
-async def server_error_handler(request: Request, exc: Exception):
+async def server_error_handler(
+    request: Request,
+    exc: Exception,
+):
+    """Handle internal server errors."""
+
     if settings.DEBUG:
         raise exc
-    return templates.TemplateResponse(request, "errors/500.html", {}, status_code=500)
 
+    return templates.TemplateResponse(
+        request,
+        "errors/500.html",
+        {},
+        status_code=500,
+    )
 
-# ─── Root Redirect ────────────────────────────────────────────────────────────
 
 @app.get("/", include_in_schema=False)
 async def root(request: Request):
-    """Redirect root to dashboard (or login if not authenticated)."""
+    """Redirect root to dashboard or login."""
+
     token = request.cookies.get("access_token")
+
     if token:
-        return RedirectResponse(url="/dashboard", status_code=302)
-    return RedirectResponse(url="/auth/login", status_code=302)
+        return RedirectResponse(
+            url="/dashboard",
+            status_code=302,
+        )
+
+    return RedirectResponse(
+        url="/auth/login",
+        status_code=302,
+    )
 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for deployment monitoring."""
-    return {"status": "ok", "app": settings.APP_NAME, "env": settings.APP_ENV}
+
+    return {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "env": settings.APP_ENV,
+    }
 
 
-# ─── Register all models so SQLAlchemy can resolve string-based relationships ──
-# Must be imported before any query runs, regardless of which router is used.
-# Use `from … import models as _*` to avoid shadowing the `app` FastAPI instance.
-from app.modules.accounts import models as _accounts_models          # noqa: F401
-from app.modules.users import models as _users_models                # noqa: F401
-from app.modules.companies import models as _companies_models        # noqa: F401
-from app.modules.jobs import models as _jobs_models                  # noqa: F401
-from app.modules.candidates import models as _candidates_models      # noqa: F401
-from app.modules.ats import models as _ats_models                    # noqa: F401
-from app.modules.interviews import models as _interviews_models      # noqa: F401
-from app.modules.billing import models as _billing_models            # noqa: F401
-from app.modules.crm import models as _crm_models                    # noqa: F401
-from app.modules.notifications import models as _notifications_models  # noqa: F401
-from app.modules.audit import models as _audit_models                # noqa: F401
-from app.modules.files import models as _files_models                # noqa: F401
+from app.modules.accounts import models as _accounts_models
+from app.modules.users import models as _users_models
+from app.modules.companies import models as _companies_models
+from app.modules.jobs import models as _jobs_models
+from app.modules.candidates import models as _candidates_models
+from app.modules.ats import models as _ats_models
+from app.modules.interviews import models as _interviews_models
+from app.modules.billing import models as _billing_models
+from app.modules.crm import models as _crm_models
+from app.modules.notifications import models as _notifications_models
+from app.modules.audit import models as _audit_models
+from app.modules.files import models as _files_models
+from app.modules.ai_matching import models as _ai_models
+from app.modules.settings import models as _settings_models
 
-# ─── Module Routers ───────────────────────────────────────────────────────────
 
 from app.modules.accounts.routes import router as auth_router
 from app.modules.users.routes import router as users_router
@@ -168,6 +227,7 @@ from app.modules.files.routes import router as files_router
 from app.modules.audit.routes import router as audit_router
 from app.modules.settings.routes import router as settings_router
 
+
 app.include_router(auth_router)
 app.include_router(dashboard_router)
 app.include_router(users_router)
@@ -185,3 +245,4 @@ app.include_router(reports_router)
 app.include_router(files_router)
 app.include_router(audit_router)
 app.include_router(settings_router)
+```
