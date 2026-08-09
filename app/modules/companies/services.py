@@ -25,3 +25,11 @@ class CompanyService(BaseService):
 
     def update_company(self, company: Company, data: dict) -> Company:
         return self.repo.update(company, data)
+
+    def delete_company(self, company: Company) -> Company:
+        """
+        Soft-delete the company (sets deleted_at) and return the instance.
+        The caller (route) is responsible for committing/rolling back the transaction.
+        """
+        self.repo.soft_delete(company)
+        return company
