@@ -119,47 +119,132 @@ async def app_exception_handler(
     )
 
 
-@app.exception_handler(404)
-async def not_found_handler(
-    request: Request,
-    exc: HTTPException,
-):
-    """Handle 404 errors."""
-
-    if request.url.path.startswith("/api/"):
+@app.exception_handler(401)
+async def unauthorized_handler(request: Request, exc: HTTPException):
+    """
+    معالج استثناء موحد للـ 401 (عدم المصادقة / انتهاء الجلسة)
+    
+    يقوم بـ:
+    1. تحويل المستخدم إلى صفحة تسجيل الدخول للصفحات المرئية
+    2. إرجاع JSON error للـ API
+    3. حذف cookies الجلسة (اختياري)
+    """
+    
+    # إذا كان طلب API (AJAX/JSON)
+    if request.headers.get("Accept", "").startswith("application/json") or \
+       request.headers.get("HX-Request"):
         return JSONResponse(
-            status_code=404,
+            status_code=401,
             content={
                 "success": False,
                 "error": {
-                    "message": "Not found",
+                    "code": "UNAUTHORIZED",
+                    "message": "جلستك انتهت. يرجى تسجيل الدخول مجددًا",
                 },
             },
         )
-
-    return templates.TemplateResponse(
-        request,
-        "errors/404.html",
-        {},
-        status_code=404,
+    
+    # إذا كان صفحة مرئية (HTML)
+    # تحويل المستخدم مباشرة إلى صفحة تسجيل الدخول
+    response = RedirectResponse(
+        url="/auth/login",
+        status_code=302,
     )
+    
+    # حذف cookies الجلسة
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("session", path="/")
+    
+    return response
 
 
-@app.exception_handler(500)
-async def server_error_handler(
-    request: Request,
-    exc: Exception,
-):
-    """Handle internal server errors."""
-
-    if settings.DEBUG:
-        raise exc
-
-    return templates.TemplateResponse(
-        request,
-        "errors/500.html",
-        {},
-        status_code=500,
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """معالج استثناء HTTP عام - يتعامل مع جميع HTTPException بما فيها 401 و 403"""
+    
+    # معالجة خاصة لـ 401
+    if exc.status_code == 401:
+        # إذا كان طلب API
+        if request.headers.get("Accept", "").startswith("application/json") or \
+           request.headers.get("HX-Request"):
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "جلستك انتهت. يرجى تسجيل الدخول مجددًا",
+                    },
+                },
+            )
+        
+        # تحويل صفحات HTML إلى login
+        response = RedirectResponse(url="/auth/login", status_code=302)
+        response.delete_cookie("access_token", path="/")
+        response.delete_cookie("session", path="/")
+        return response
+    
+    # معالجة خاصة لـ 403 (الوصول مرفوع)
+    if exc.status_code == 403:
+        if request.headers.get("Accept", "").startswith("application/json") or \
+           request.headers.get("HX-Request"):
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "FORBIDDEN",
+                        "message": "ليس لديك صلاحيات للوصول إلى هذا المورد",
+                    },
+                },
+            )
+        
+        return templates.TemplateResponse(
+            request,
+            "errors/403.html",
+            {"error": exc.detail},
+            status_code=403,
+        )
+    
+    # معالجة 404
+    if exc.status_code == 404:
+        if request.headers.get("Accept", "").startswith("application/json"):
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "NOT_FOUND",
+                        "message": "الصفحة غير موجودة",
+                    },
+                },
+            )
+        
+        return templates.TemplateResponse(
+            request,
+            "errors/404.html",
+            {},
+            status_code=404,
+        )
+    
+    # للأخطاء الأخرى
+    if request.headers.get("Accept", "").startswith("application/json"):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "success": False,
+                "error": {
+                    "code": "HTTP_ERROR",
+                    "message": exc.detail or "حدث خطأ",
+                },
+            },
+        )
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+        },
     )
 
 
