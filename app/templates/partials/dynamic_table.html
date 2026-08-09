@@ -1,0 +1,73 @@
+{% macro dynamic_table(items, fields, item_url_prefix='', empty_message='No items', invite_url=None) %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+        <tr>
+          {% if fields %}
+            {% for f in fields %}
+              <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">{{ f.name.replace('_',' ')|capitalize }}</th>
+            {% endfor %}
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+          {% else %}
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Item</th>
+            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        {% if items %}
+          {% for item in items %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+              {% if fields %}
+                {% for f in fields %}
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {% set val = attribute(item, f.name) %}
+                    {% if val is none %}
+                      —
+                    {% elif f.type.lower().find('bool') >= 0 %}
+                      {{ 'Yes' if val else 'No' }}
+                    {% elif f.foreign_keys %}
+                      {{ val.full_name if getattr(val, 'full_name', None) else (val.name if getattr(val, 'name', None) else val) }}
+                    {% else %}
+                      {{ val }}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-2">
+                    <a href="{{ item_url_prefix }}{{ item.id }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">View</a>
+                    <a href="{{ item_url_prefix }}{{ item.id }}/edit" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Edit</a>
+                  </div>
+                </td>
+              {% else %}
+                <td class="px-6 py-4">{{ item }}</td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-2">
+                    <a href="{{ item_url_prefix }}{{ item.id }}" class="p-2 text-gray-600 hover:text-gray-900">View</a>
+                  </div>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="{{ (fields|length if fields else 1) + 1 }}" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-"/>
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400 font-medium">{{ empty_message }}</p>
+                {% if invite_url %}
+                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Invite someone to get started</p>
+                <a href="{{ invite_url }}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">Invite</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endmacro %}
