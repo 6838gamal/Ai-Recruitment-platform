@@ -1,0 +1,4 @@
+feat: start migration of accounts templates to dynamic partials
+
+- Update accounts routes to pass fields metadata
+- Replace static account templates with dynamic table partial where applicable
