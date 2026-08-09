@@ -23,7 +23,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for idx, c in companies|list|dictsort|reverse %}
+        {% for c in companies %}
         <tr id="company-row-{{ c.id }}">
           <td>{{ loop.index }}</td>
           <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
