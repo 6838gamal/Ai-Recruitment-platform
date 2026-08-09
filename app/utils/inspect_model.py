@@ -1,4 +1,4 @@
-from flask import current_app
+import os
 from sqlalchemy import inspect
 
 DEFAULT_SENSITIVE = {"password", "salt", "auth_token", "otp_secret", "hashed_password", "token_hash", "refresh_token", "refresh_token_hash", "failed_attempts", "locked_until", "last_login_at"}
@@ -6,11 +6,9 @@ DEFAULT_SENSITIVE = {"password", "salt", "auth_token", "otp_secret", "hashed_pas
 
 def get_sensitive_list():
     # Allow overriding via env var DYNAMIC_TEMPLATES_SENSITIVE (comma-separated)
-    overrides = current_app.config.get("DYNAMIC_TEMPLATES_SENSITIVE") if hasattr(current_app, 'config') else None
-    if overrides:
-        extra = {s.strip() for s in overrides.split(",") if s.strip()}
-        return DEFAULT_SENSITIVE.union(extra)
-    return DEFAULT_SENSITIVE
+    overrides = os.getenv("DYNAMIC_TEMPLATES_SENSITIVE", "")
+    extra = {s.strip() for s in overrides.split(",") if s.strip()}
+    return DEFAULT_SENSITIVE.union(extra)
 
 
 def get_model_fields_sqlalchemy(Model, exclude=None):

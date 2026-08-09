@@ -1,0 +1,1 @@
+Update inspect_model to avoid Flask dependency and read overrides from environment; keep DEFAULT_SENSITIVE.
