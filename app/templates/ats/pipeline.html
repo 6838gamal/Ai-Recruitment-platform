@@ -1,11 +1,224 @@
 {% extends "base.html" %}
 {% block title %}ATS Pipeline — AI Recruitment Platform{% endblock %}
-{% block page_title %}ATS Pipeline{% endblock %}
+{% block page_title %}Pipeline — Senior Backend Developer{% endblock %}
+
 {% block content %}
 <div class="p-6">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">ATS Module — Job #{{ job_id }}</h2>
-    <p class="text-gray-500 dark:text-gray-400">This module is under construction.</p>
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Senior Backend Developer</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Job ID: #JOB-2024-001 • Posted 2 weeks ago</p>
+      </div>
+      <a href="/jobs" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Back to ATS
+      </a>
+    </div>
+  </div>
+
+  <!-- Pipeline Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {% set stats = [
+      {"label": "Total Applications", "value": 23, "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", "color": "blue"},
+      {"label": "In Review", "value": 8, "icon": "M9 12l2 2 4-4", "color": "yellow"},
+      {"label": "Interviews", "value": 5, "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "purple"},
+      {"label": "Offers Sent", "value": 2, "icon": "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", "color": "green"}
+    ] %}
+    {% for stat in stats %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
+          <p class="text-2xl font-bold text-{{ stat.color }}-600 mt-1">{{ stat.value }}</p>
+        </div>
+        <div class="w-10 h-10 bg-{{ stat.color }}-50 dark:bg-{{ stat.color }}-900/20 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-{{ stat.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ stat.icon }}"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Kanban Pipeline -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {% set stages = [
+      {
+        "name": "Applied",
+        "count": 10,
+        "color": "blue",
+        "candidates": [
+          {"name": "Ahmed Hassan", "email": "ahmed@example.com", "date": "Today"},
+          {"name": "Fatima Ali", "email": "fatima@example.com", "date": "Yesterday"},
+        ]
+      },
+      {
+        "name": "In Review",
+        "count": 6,
+        "color": "yellow",
+        "candidates": [
+          {"name": "Mohammed Ibrahim", "email": "mohammed@example.com", "date": "2 days ago"},
+          {"name": "Sara Johnson", "email": "sara@example.com", "date": "3 days ago"},
+        ]
+      },
+      {
+        "name": "Interview",
+        "count": 5,
+        "color": "purple",
+        "candidates": [
+          {"name": "Ahmed Hassan", "email": "ahmed@example.com", "date": "Tomorrow, 2 PM"},
+          {"name": "Fatima Ali", "email": "fatima@example.com", "date": "Friday, 10 AM"},
+        ]
+      },
+      {
+        "name": "Offer",
+        "count": 2,
+        "color": "green",
+        "candidates": [
+          {"name": "Mohammed Ibrahim", "email": "mohammed@example.com", "date": "Pending"},
+        ]
+      }
+    ] %}
+
+    {% for stage in stages %}
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+      <!-- Stage Header -->
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 bg-{{ stage.color }}-600 rounded-full"></div>
+          <h3 class="font-semibold text-gray-900 dark:text-white">{{ stage.name }}</h3>
+        </div>
+        <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold text-white bg-{{ stage.color }}-600 rounded-full">
+          {{ stage.count }}
+        </span>
+      </div>
+
+      <!-- Candidate Cards -->
+      <div class="space-y-3">
+        {% for candidate in stage.candidates %}
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md hover:border-{{ stage.color }}-300 dark:hover:border-{{ stage.color }}-600 transition-all cursor-pointer group">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-{{ stage.color }}-600 dark:group-hover:text-{{ stage.color }}-400 transition-colors">
+                {{ candidate.name }}
+              </h4>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{{ candidate.email }}</p>
+            </div>
+            <button class="p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ candidate.date }}</span>
+            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-{{ stage.color }}-100 dark:bg-{{ stage.color }}-900/30 text-{{ stage.color }}-800 dark:text-{{ stage.color }}-300">
+              View
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Add New Button -->
+      <button class="w-full mt-4 flex items-center justify-center gap-2 p-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-{{ stage.color }}-300 dark:hover:border-{{ stage.color }}-600 hover:bg-{{ stage.color }}-50 dark:hover:bg-{{ stage.color }}-900/10 text-gray-600 dark:text-gray-400 hover:text-{{ stage.color }}-600 dark:hover:text-{{ stage.color }}-400 font-medium text-sm transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Additional Info Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+    <!-- Job Details -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Job Details</h3>
+      <div class="space-y-4">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Department</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Engineering</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Experience</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">5+ years</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Salary Range</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">$80k - $120k</p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Location</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Cairo, Egypt</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Metrics -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Conversion Metrics</h3>
+      <div class="space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Applied → Review</p>
+            <span class="text-sm font-semibold text-blue-600">60%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 60%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Review → Interview</p>
+            <span class="text-sm font-semibold text-purple-600">83%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-purple-600 h-2 rounded-full" style="width: 83%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Interview → Offer</p>
+            <span class="text-sm font-semibold text-green-600">40%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-green-600 h-2 rounded-full" style="width: 40%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+      <div class="space-y-2">
+        <button class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left">
+          <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Add Candidate</span>
+        </button>
+        <button class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left">
+          <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">View Analytics</span>
+        </button>
+        <button class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-left">
+          <svg class="w-5 h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Job Settings</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
