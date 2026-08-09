@@ -13,7 +13,7 @@ class UserRole(str, Enum):
     ACCOUNTANT = "accountant"
 
 
-# ─── Role Hierarchy ───────────────────────────────────────────────────────────
+# ─── Role Hierarchy ────────────────────────────────────────────────────────
 # Higher index = higher authority
 ROLE_HIERARCHY: List[UserRole] = [
     UserRole.INTERVIEWER,
@@ -48,6 +48,7 @@ class Permission(str, Enum):
     # User permissions
     MANAGE_USERS = "manage_users"
     VIEW_USERS = "view_users"
+    VIEW_ACCOUNTS = "view_accounts"  # added to support accounts routes
 
     # Job permissions
     MANAGE_JOBS = "manage_jobs"
@@ -88,6 +89,7 @@ ROLE_PERMISSIONS: dict[UserRole, List[Permission]] = {
         Permission.VIEW_COMPANIES,
         Permission.MANAGE_USERS,
         Permission.VIEW_USERS,
+        Permission.VIEW_ACCOUNTS,
         Permission.MANAGE_JOBS,
         Permission.VIEW_JOBS,
         Permission.MANAGE_CANDIDATES,
@@ -106,6 +108,7 @@ ROLE_PERMISSIONS: dict[UserRole, List[Permission]] = {
     UserRole.HR: [
         Permission.MANAGE_USERS,
         Permission.VIEW_USERS,
+        Permission.VIEW_ACCOUNTS,
         Permission.MANAGE_JOBS,
         Permission.VIEW_JOBS,
         Permission.MANAGE_CANDIDATES,
