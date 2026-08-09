@@ -1,73 +1,30 @@
 {% extends "base.html" %}
-{% block title %}قائمة الشركات{% endblock %}
+{% block title %}Companies — AI Recruitment Platform{% endblock %}
+{% block page_title %}Companies{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>قائمة الشركات</h2>
-    <a href="/companies/create" class="btn btn-primary">إضافة شركة جديدة</a>
-  </div>
+<div class="p-6">
+    <!-- Header with Create Button -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Companies</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage company information and branches</p>
+        </div>
+        <a href="/companies/create" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Company
+        </a>
+    </div>
 
-  {% if companies %}
-  <div class="table-responsive">
-    <table id="companies-table" class="table table-striped table-bordered">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>الاسم</th>
-          <th>الـ slug</th>
-          <th>الصناعة</th>
-          <th>البلد</th>
-          <th>الحالة</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {# Handle both mapping (dict) and list/sequence of objects #}
-        {% if companies is mapping %}
-          {% for key, c in companies | dictsort | reverse %}
-          <tr id="company-row-{{ c.id }}">
-            <td>{{ loop.index }}</td>
-            <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
-            <td>{{ c.slug }}</td>
-            <td>{{ c.industry or '-' }}</td>
-            <td>{{ c.country or '-' }}</td>
-            <td>{{ 'مفعل' if c.is_active else 'غير مفعل' }}</td>
-            <td>
-              <a href="/companies/{{ c.slug }}/edit" class="btn btn-sm btn-outline-secondary">تعديل</a>
-
-              <form method="post" action="/companies/{{ c.slug }}/delete" class="d-inline delete-form" style="display:inline">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ c.id }}" data-action="/companies/{{ c.slug }}/delete">حذف</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        {% else %}
-          {% for c in companies | sort(attribute='name') | reverse %}
-          <tr id="company-row-{{ c.id }}">
-            <td>{{ loop.index }}</td>
-            <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
-            <td>{{ c.slug }}</td>
-            <td>{{ c.industry or '-' }}</td>
-            <td>{{ c.country or '-' }}</td>
-            <td>{{ 'مفعل' if c.is_active else 'غير مفعل' }}</td>
-            <td>
-              <a href="/companies/{{ c.slug }}/edit" class="btn btn-sm btn-outline-secondary">تعديل</a>
-
-              <form method="post" action="/companies/{{ c.slug }}/delete" class="d-inline delete-form" style="display:inline">
-                <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ c.id }}" data-action="/companies/{{ c.slug }}/delete">حذف</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        {% endif %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="alert alert-info">لا توجد شركات حتى الآن.</div>
-  {% endif %}
+    <!-- Companies Table - Dynamic -->
+    {% from 'partials/dynamic_table.html' import dynamic_table %}
+    {% set fields = [
+        {"name": "name", "type": "str"},
+        {"name": "industry", "type": "str"},
+        {"name": "country", "type": "str"},
+    ] %}
+    {{ dynamic_table(companies, fields, item_url_prefix='/companies/', empty_message='No companies', invite_url='/companies/create') }}
 </div>
-
-<script src="/static/js/companies.js"></script>
 {% endblock %}
