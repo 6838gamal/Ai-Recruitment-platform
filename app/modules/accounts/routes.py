@@ -7,7 +7,8 @@ from app.database import get_db
 from app.dependencies import require_permission
 from app.core.permissions import Permission
 from app.modules.accounts.services import AccountService
-from app.modules.accounts.models import Account
+# models.py defines User not Account; import User and alias as Account for routes compatibility
+from app.modules.accounts.models import User as Account
 from app.utils.inspect_model import get_model_fields_sqlalchemy
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"]) 
