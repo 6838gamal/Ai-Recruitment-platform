@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Reports — AI Recruitment Platform{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+{% block content %}
+<div class="p-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comprehensive recruitment metrics and insights</p>
+  </div>
+
+  <!-- Date Range Selector -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div class="flex gap-4">
+      <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">Last 7 Days</button>
+      <button class="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">Last 30 Days</button>
+      <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">Last 90 Days</button>
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Applications</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">284</p>
+      <p class="text-xs text-green-600 dark:text-green-400 mt-2">↑ 12% from last month</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Avg. Time to Hire</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">18 days</p>
+      <p class="text-xs text-red-600 dark:text-red-400 mt-2">↓ 3 days improvement</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Offer Acceptance Rate</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">78%</p>
+      <p class="text-xs text-green-600 dark:text-green-400 mt-2">↑ 5% from last month</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Hires This Month</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">12</p>
+      <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Target: 15</p>
+    </div>
+  </div>
+
+  <!-- Charts Placeholder -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Applications Over Time</h3>
+      <div class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
+        <p>Chart placeholder - Chart.js or similar</p>
+      </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Pipeline Conversion</h3>
+      <div class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
+        <p>Chart placeholder - Chart.js or similar</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

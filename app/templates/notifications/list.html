@@ -3,9 +3,66 @@
 {% block page_title %}Notifications{% endblock %}
 {% block content %}
 <div class="p-6">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Notifications Module</h2>
-    <p class="text-gray-500 dark:text-gray-400">This module is under construction.</p>
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Stay updated with important events</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex gap-2 mb-6">
+    <button class="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">All</button>
+    <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Unread</button>
+    <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Applications</button>
+    <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Interviews</button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="space-y-3">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-gray-900 dark:text-white">New job application received</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Sarah Johnson applied for Senior Developer position</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">5 minutes ago</p>
+        </div>
+        <span class="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-2"></span>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-gray-900 dark:text-white">Interview scheduled</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Interview with John Doe scheduled for tomorrow at 2:00 PM</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">2 hours ago</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors opacity-60">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-gray-900 dark:text-white">Daily digest ready</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Your daily summary report is ready for review</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">1 day ago</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

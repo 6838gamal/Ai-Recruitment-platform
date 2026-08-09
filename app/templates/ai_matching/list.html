@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}AI Matching — AI Recruitment Platform{% endblock %}
+{% block page_title %}AI Matching{% endblock %}
+{% block content %}
+<div class="p-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">AI Matching</h2>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Intelligent candidate-job matching powered by AI</p>
+  </div>
+
+  <!-- Select Job -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+    <label class="block text-sm font-medium text-gray-900 dark:text-white mb-2">Select Job Position</label>
+    <select class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+      <option>Senior Backend Developer</option>
+      <option>Product Manager</option>
+      <option>UX Designer</option>
+      <option>Data Scientist</option>
+    </select>
+  </div>
+
+  <!-- Matching Results -->
+  <div class="space-y-4">
+    {% set matches = [
+      {"name": "Ahmed Hassan", "score": 95, "email": "ahmed@example.com", "skills": ["Python", "Django", "PostgreSQL"], "experience": "8 years"},
+      {"name": "Sarah Smith", "score": 88, "email": "sarah@example.com", "skills": ["Python", "FastAPI", "MongoDB"], "experience": "6 years"},
+      {"name": "John Doe", "score": 82, "email": "john@example.com", "skills": ["Java", "Spring Boot", "MySQL"], "experience": "5 years"},
+      {"name": "Maria Garcia", "score": 75, "email": "maria@example.com", "skills": ["Node.js", "Express", "PostgreSQL"], "experience": "4 years"}
+    ] %}
+    {% for match in matches %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ match.name }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ match.email }}</p>
+        </div>
+        <div class="text-right">
+          <div class="text-3xl font-bold text-primary-600">{{ match.score }}%</div>
+          <p class="text-xs text-gray-500 dark:text-gray-500">Match Score</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mb-4 py-4 border-y border-gray-200 dark:border-gray-700">
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Experience</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ match.experience }}</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Top Skills</p>
+          <div class="flex flex-wrap gap-1">
+            {% for skill in match.skills[:2] %}
+            <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Match Reasons</p>
+          <p class="text-xs text-green-600 dark:text-green-400 font-medium">✓ Skills match</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+          View Profile
+        </button>
+        <button class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">
+          Send to Job
+        </button>
+        <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">
+          ✓
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
