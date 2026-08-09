@@ -70,13 +70,16 @@
                             {% if fields %}
                                 {% for f in fields %}
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {% set val = (user[f.name] if (user is mapping and f.name in user) else getattr(user, f.name, None)) %}
+                                        {# Use Jinja attribute() which works for attributes and mapping keys #}
+                                        {% set val = attribute(user, f.name) %}
                                         {% if val is none %}
                                             —
                                         {% elif f.type.lower().find('bool') >= 0 %}
                                             {{ 'Yes' if val else 'No' }}
                                         {% elif f.foreign_keys %}
-                                            {{ val.full_name if getattr(val, 'full_name', None) else (val.name if getattr(val, 'name', None) else val) }}
+                                            {% set fk_full = attribute(val, 'full_name') if val is not none else None %}
+                                            {% set fk_name = attribute(val, 'name') if val is not none else None %}
+                                            {{ fk_full if fk_full else (fk_name if fk_name else val) }}
                                         {% else %}
                                             {{ val }}
                                         {% endif %}
