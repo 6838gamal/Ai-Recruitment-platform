@@ -70,7 +70,7 @@
                             {% if fields %}
                                 {% for f in fields %}
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {% set val = user[f.name] if f.name in user else getattr(user, f.name, None) %}
+                                        {% set val = getattr(user, f.name, None) %}
                                         {% if val is none %}
                                             —
                                         {% elif f.type.lower().find('bool') >= 0 %}
