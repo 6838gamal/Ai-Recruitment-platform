@@ -23,23 +23,44 @@
         </tr>
       </thead>
       <tbody>
-        {% for idx, c in companies|list|dictsort|reverse %}
-        <tr id="company-row-{{ c.id }}">
-          <td>{{ loop.index }}</td>
-          <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
-          <td>{{ c.slug }}</td>
-          <td>{{ c.industry or '-' }}</td>
-          <td>{{ c.country or '-' }}</td>
-          <td>{{ 'مفعل' if c.is_active else 'غير مفعل' }}</td>
-          <td>
-            <a href="/companies/{{ c.slug }}/edit" class="btn btn-sm btn-outline-secondary">تعديل</a>
+        {# Handle both mapping (dict) and list/sequence of objects #}
+        {% if companies is mapping %}
+          {% for key, c in companies | dictsort | reverse %}
+          <tr id="company-row-{{ c.id }}">
+            <td>{{ loop.index }}</td>
+            <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
+            <td>{{ c.slug }}</td>
+            <td>{{ c.industry or '-' }}</td>
+            <td>{{ c.country or '-' }}</td>
+            <td>{{ 'مفعل' if c.is_active else 'غير مفعل' }}</td>
+            <td>
+              <a href="/companies/{{ c.slug }}/edit" class="btn btn-sm btn-outline-secondary">تعديل</a>
 
-            <form method="post" action="/companies/{{ c.slug }}/delete" class="d-inline delete-form" style="display:inline">
-              <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ c.id }}" data-action="/companies/{{ c.slug }}/delete">حذف</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
+              <form method="post" action="/companies/{{ c.slug }}/delete" class="d-inline delete-form" style="display:inline">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ c.id }}" data-action="/companies/{{ c.slug }}/delete">حذف</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          {% for c in companies | sort(attribute='name') | reverse %}
+          <tr id="company-row-{{ c.id }}">
+            <td>{{ loop.index }}</td>
+            <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
+            <td>{{ c.slug }}</td>
+            <td>{{ c.industry or '-' }}</td>
+            <td>{{ c.country or '-' }}</td>
+            <td>{{ 'مفعل' if c.is_active else 'غير مفعل' }}</td>
+            <td>
+              <a href="/companies/{{ c.slug }}/edit" class="btn btn-sm btn-outline-secondary">تعديل</a>
+
+              <form method="post" action="/companies/{{ c.slug }}/delete" class="d-inline delete-form" style="display:inline">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ c.id }}" data-action="/companies/{{ c.slug }}/delete">حذف</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        {% endif %}
       </tbody>
     </table>
   </div>
