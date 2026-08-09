@@ -1,11 +1,166 @@
 {% extends "base.html" %}
-{% block title %}Reports — AI Recruitment Platform{% endblock %}
-{% block page_title %}Reports{% endblock %}
+{% block title %}Reports & Analytics — AI Recruitment Platform{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
 {% block content %}
 <div class="p-6">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Reports Module</h2>
-    <p class="text-gray-500 dark:text-gray-400">This module is under construction.</p>
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Track recruitment metrics and performance insights</p>
+      </div>
+      <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Export Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Date Range Filter -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-4 items-end">
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From Date</label>
+        <input type="date" value="2024-08-01" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+      </div>
+      <div class="flex-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To Date</label>
+        <input type="date" value="2024-08-09" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+      </div>
+      <button class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+        Apply
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {% set kpis = [
+      {"label": "Total Applications", "value": 456, "change": "+12%", "icon": "M12 4.354a4 4 0 110 5.292m-7.08-1.26a2 2 0 11-2.828-2.828m9.636 9.636a2 2 0 11-2.828-2.828m-9.636 9.636a2 2 0 11-2.828-2.828m9.636-9.636a2 2 0 11-2.828 2.828"},
+      {"label": "Avg. Hiring Time", "value": "28", "change": "-3 days", "unit": "days", "icon": "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"},
+      {"label": "Offer Acceptance", "value": "78%", "change": "+5%", "icon": "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"},
+      {"label": "Cost per Hire", "value": "$2,450", "change": "-8%", "icon": "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"}
+    ] %}
+    {% for kpi in kpis %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="flex items-start justify-between mb-3">
+        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ kpi.label }}</span>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+          {{ kpi.change }}
+        </span>
+      </div>
+      <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ kpi.value }}</div>
+      {% if kpi.unit %}<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ kpi.unit }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Applications Over Time -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Applications Over Time</h3>
+      <div class="space-y-4">
+        {% for i in range(1, 6) %}
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Week {{ i }}</span>
+            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ [45, 52, 38, 61, 55][i-1] }}</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-primary-600 h-2 rounded-full" style="width: {{ [45, 52, 38, 61, 55][i-1] }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Hiring Pipeline -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Hiring Pipeline</h3>
+      <div class="space-y-4">
+        {% set pipeline = [
+          {"stage": "Applied", "count": 456, "color": "blue"},
+          {"stage": "In Review", "count": 143, "color": "yellow"},
+          {"stage": "Interview", "count": 67, "color": "purple"},
+          {"stage": "Offer", "count": 28, "color": "green"},
+          {"stage": "Hired", "count": 12, "color": "emerald"}
+        ] %}
+        {% for item in pipeline %}
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">{{ item.stage }}</span>
+            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.count }}</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+            <div class="bg-{{ item.color }}-600 h-3 rounded-full" style="width: {{ (item.count / 456) * 100 }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Source Performance & Job Performance -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Sources -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Candidate Sources</h3>
+      <div class="space-y-4">
+        {% set sources = [
+          {"name": "LinkedIn", "count": 156, "percent": 35},
+          {"name": "Job Boards", "count": 124, "percent": 28},
+          {"name": "Referral", "count": 98, "percent": 22},
+          {"name": "Direct Apply", "count": 52, "percent": 12},
+          {"name": "Agencies", "count": 26, "percent": 3}
+        ] %}
+        {% for source in sources %}
+        <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ source.name }}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden max-w-xs">
+                <div class="h-full bg-primary-600" style="width: {{ source.percent }}%"></div>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ source.percent }}%</span>
+            </div>
+          </div>
+          <span class="text-sm font-bold text-gray-900 dark:text-white ml-4">{{ source.count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Top Performing Jobs -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performing Jobs</h3>
+      <div class="space-y-3">
+        {% set jobs = [
+          {"title": "Senior Backend Developer", "applications": 78, "hired": 3},
+          {"title": "Frontend Engineer", "applications": 65, "hired": 2},
+          {"title": "Product Manager", "applications": 52, "hired": 1},
+          {"title": "Data Scientist", "applications": 41, "hired": 1},
+          {"title": "DevOps Engineer", "applications": 32, "hired": 0}
+        ] %}
+        {% for job in jobs %}
+        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ job.title }}</p>
+          <div class="flex items-center gap-4 mt-2">
+            <div class="flex-1">
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ job.applications }} applications</p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+              {{ job.hired }} hired
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
