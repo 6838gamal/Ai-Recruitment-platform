@@ -17,12 +17,28 @@ async def dashboard(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user_profile),
 ):
-    """Main dashboard page."""
+    """Main dashboard page with dynamic data."""
     from app.modules.dashboard.services import DashboardService
+    
     service = DashboardService(db)
     stats = service.get_stats(current_user.company_id)
+    recent_activities = service.get_recent_activities(current_user.company_id)
+    
+    # Permissions for quick actions
+    permissions = {
+        "can_create_jobs": True,  # Should be based on actual permissions
+        "can_create_candidates": True,
+        "can_schedule_interviews": True,
+        "can_use_ai_matching": True,
+    }
 
-    return templates.TemplateResponse(request, "dashboard/index.html", {
-        "current_user": current_user,
-        "stats": stats,
-    })
+    return templates.TemplateResponse(
+        request,
+        "dashboard/index.html",
+        {
+            "current_user": current_user,
+            "stats": stats,
+            "recent_activities": recent_activities,
+            "permissions": permissions,
+        },
+    )
