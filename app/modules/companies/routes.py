@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -49,7 +49,7 @@ async def company_create_post(request: Request, name: str = Form(...), slug: str
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or invalid data"})
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or [..."})
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
 
 
@@ -90,7 +90,7 @@ async def company_edit_get(request: Request, identifier: str, db: Session = Depe
 
 
 @router.post("/{identifier}/edit")
-async def company_edit_post(request: Request, identifier: str, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
+async def company_edit_post(request: Request, identifier: str, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAG[...])):
     service = CompanyService(db)
     company = service.get_by_slug(identifier)
     if not company:
@@ -109,5 +109,42 @@ async def company_edit_post(request: Request, identifier: str, name: str = Form(
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug already exists or invalid data"})
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug[...]"})
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)
+
+
+# ---------- Delete route (soft-delete) ----------
+@router.post("/{identifier}/delete")
+async def company_delete(
+    request: Request,
+    identifier: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.MANAGE_COMPANIES)),
+):
+    service = CompanyService(db)
+
+    # Try slug first, then UUID id
+    company = service.get_by_slug(identifier)
+    if not company:
+        try:
+            import uuid
+            uid = uuid.UUID(identifier)
+            company = service.get_by_id(uid)
+        except Exception:
+            company = None
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    try:
+        service.delete_company(company)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
+        raise HTTPException(status_code=500, detail="Failed to delete company")
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JSONResponse({"status": "ok"})
+    return RedirectResponse(url="/companies", status_code=303)
