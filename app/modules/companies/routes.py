@@ -49,7 +49,7 @@ async def company_create_post(request: Request, name: str = Form(...), slug: str
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or [..."})
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or is invalid."})
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
 
 
@@ -90,7 +90,7 @@ async def company_edit_get(request: Request, identifier: str, db: Session = Depe
 
 
 @router.post("/{identifier}/edit")
-async def company_edit_post(request: Request, identifier: str, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAG[...])):
+async def company_edit_post(request: Request, identifier: str, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
     service = CompanyService(db)
     company = service.get_by_slug(identifier)
     if not company:
@@ -109,7 +109,7 @@ async def company_edit_post(request: Request, identifier: str, name: str = Form(
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug[...]"})
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug already exists or is invalid."})
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)
 
 
