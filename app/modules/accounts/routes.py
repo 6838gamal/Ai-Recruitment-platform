@@ -15,7 +15,7 @@ router = APIRouter(prefix="/accounts", tags=["Accounts"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse, name="accounts:list")
-async def accounts_list(request: Request, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.VIEW_ACCOUNTS))):
+async def accounts_list(request: Request, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.VIEW_USERS))):
     service = AccountService(db)
     accounts = service.list_accounts()
     fields = get_model_fields_sqlalchemy(Account)
