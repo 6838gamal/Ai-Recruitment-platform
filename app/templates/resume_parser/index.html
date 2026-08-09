@@ -1,11 +1,179 @@
 {% extends "base.html" %}
 {% block title %}Resume Parser — AI Recruitment Platform{% endblock %}
 {% block page_title %}Resume Parser{% endblock %}
+
 {% block content %}
 <div class="p-6">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-    <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Resume Parser Module</h2>
-    <p class="text-gray-500 dark:text-gray-400">This module is under construction.</p>
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Resume Parser</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload and extract information from resumes using AI</p>
+      </div>
+      <button class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Upload Resume
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {% set stats = [
+      {"label": "Resumes Processed", "value": 1247, "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", "color": "blue"},
+      {"label": "Accuracy Rate", "value": "94%", "icon": "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", "color": "green"},
+      {"label": "This Month", "value": 143, "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "purple"},
+      {"label": "Avg. Parse Time", "value": "2.3s", "icon": "M13 10V3L4 14h7v7l9-11h-7z", "color": "yellow"}
+    ] %}
+    {% for stat in stats %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">{{ stat.value }}</p>
+        </div>
+        <div class="w-10 h-10 bg-{{ stat.color }}-50 dark:bg-{{ stat.color }}-900/20 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-{{ stat.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ stat.icon }}"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Upload Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <div class="lg:col-span-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 text-center hover:border-primary-400 dark:hover:border-primary-600 transition-colors">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Drag and drop your resume here</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">or click to browse files</p>
+        <button class="inline-flex items-center gap-2 px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Choose File
+        </button>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Supported: PDF, DOC, DOCX (Max 10MB)</p>
+      </div>
+    </div>
+
+    <!-- Recent Uploads -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Uploads</h3>
+      <div class="space-y-3">
+        {% for i in range(4) %}
+        <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8 16a8 8 0 100-16 8 8 0 000 16zM9 5a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+            </svg>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ ['Ahmed_Hassan_CV.pdf', 'Fatima_Ali_Resume.pdf', 'Mohammed_Ibrahim.docx', 'Sara_Johnson_CV.pdf'][i] }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ ['Today', 'Yesterday', '2 days ago', '3 days ago'][i] }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Processing Results -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Last Parsed Resume</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ahmed Hassan CV (Parsed 2 hours ago)</p>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Personal Info -->
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Personal Information</h4>
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Full Name</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Ahmed Hassan Mohamed</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Email</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">ahmed.hassan@email.com</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Phone</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">+20 123 456 7890</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Location</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Cairo, Egypt</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills & Experience -->
+        <div>
+          <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Extracted Skills</h4>
+          <div class="flex flex-wrap gap-2">
+            {% set skills = ['Python', 'JavaScript', 'React', 'Node.js', 'MongoDB', 'PostgreSQL', 'Docker', 'AWS'] %}
+            {% for skill in skills %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300">
+              {{ skill }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Experience Section -->
+      <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <h4 class="font-semibold text-gray-900 dark:text-white mb-4">Work Experience</h4>
+        <div class="space-y-4">
+          <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">Senior Backend Developer</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Tech Company Ltd</p>
+              </div>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">2021 - Present</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Led backend development for microservices architecture using Python and Node.js</p>
+          </div>
+          <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">Backend Developer</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">StartUp Inc</p>
+              </div>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">2019 - 2021</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Developed REST APIs and database optimization</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+        <button class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Create Candidate
+        </button>
+        <button class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download JSON
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
