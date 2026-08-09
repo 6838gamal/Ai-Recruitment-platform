@@ -6,45 +6,106 @@
   <!-- Stats Grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {% set stat_cards = [
-      {"label": "Total Jobs", "value": stats.total_jobs, "icon": "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", "color": "blue"},
-      {"label": "Candidates", "value": stats.total_candidates, "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", "color": "green"},
-      {"label": "Applications", "value": stats.total_applications, "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", "color": "purple"},
-      {"label": "Interviews", "value": stats.total_interviews, "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "orange"}
+      {"label": "Active Jobs", "value": 12, "icon": "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", "color": "blue"},
+      {"label": "Total Candidates", "value": 847, "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", "color": "green"},
+      {"label": "Pending Applications", "value": 23, "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", "color": "yellow"},
+      {"label": "Scheduled Interviews", "value": 5, "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "purple"}
     ] %}
     {% for card in stat_cards %}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ card.label }}</span>
-        <div class="w-9 h-9 bg-{{ card.color }}-50 dark:bg-{{ card.color }}-900/20 rounded-xl flex items-center justify-center">
-          <svg class="w-5 h-5 text-{{ card.color }}-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 bg-{{ card.color }}-50 dark:bg-{{ card.color }}-900/20 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-{{ card.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ card.icon }}"/>
           </svg>
         </div>
       </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ card.value or 0 }}</div>
+      <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ card.value }}</div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Last 30 days</p>
     </div>
     {% endfor %}
   </div>
 
-  <!-- Quick Links -->
-  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-    <h2 class="text-base font-semibold text-gray-800 dark:text-white mb-4">Quick Actions</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-      {% set links = [
-        {"href": "/jobs/", "label": "Jobs"},
-        {"href": "/candidates/", "label": "Candidates"},
-        {"href": "/users/", "label": "Users"},
-        {"href": "/companies/", "label": "Companies"},
-        {"href": "/interviews/", "label": "Interviews"},
-        {"href": "/notifications/", "label": "Notifications"},
-        {"href": "/reports/", "label": "Reports"},
-        {"href": "/settings/", "label": "Settings"},
-      ] %}
-      {% for link in links %}
-      <a href="{{ link.href }}" class="flex items-center justify-center px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-        {{ link.label }}
-      </a>
-      {% endfor %}
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Recent Activity -->
+    <div class="lg:col-span-2">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">New job posted</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Senior Developer role in Cairo</p>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500">2 hours ago</span>
+          </div>
+
+          <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Application received</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">3 candidates applied for Product Manager</p>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500">4 hours ago</span>
+          </div>
+
+          <div class="flex items-center gap-4 pb-4">
+            <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Interview scheduled</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Tomorrow at 10:00 AM</p>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500">1 day ago</span>
+          </div>
+        </div>
+        <a href="#" class="mt-4 inline-flex text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">View all →</a>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+      <div class="space-y-2">
+        <a href="/jobs/create" class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">New Job</span>
+        </a>
+        <a href="/candidates/create" class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Add Candidate</span>
+        </a>
+        <a href="/interviews/schedule" class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">Schedule Interview</span>
+        </a>
+        <a href="/ai-matching" class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13.571 21l-2.286-6.857L6 12l5.714-2.143L13.571 3z"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-900 dark:text-white">AI Matching</span>
+        </a>
+      </div>
     </div>
   </div>
 </div>
