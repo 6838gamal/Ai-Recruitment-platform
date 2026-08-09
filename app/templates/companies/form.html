@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{% if action == 'edit' %}Edit Company{% else %}New Company{% endif %} — AI Recruitment Platform{% endblock %}
+{% block page_title %}{% if action == 'edit' %}Edit Company{% else %}New Company{% endif %}{% endblock %}
+{% block content %}
+<div class="p-6 max-w-2xl">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    {% if error %}
+      <div class="mb-4 p-3 bg-red-50 text-red-700 border border-red-100 rounded">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="{% if action == 'edit' %}/companies/{{ company.slug }}/edit{% else %}/companies/create{% endif %}">
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label class="text-sm text-gray-500">Name</label>
+          <input type="text" name="name" value="{{ company.name if company else '' }}" class="w-full mt-1 p-2 border rounded-lg" required />
+        </div>
+        <div>
+          <label class="text-sm text-gray-500">Slug</label>
+          <input type="text" name="slug" value="{{ company.slug if company else '' }}" class="w-full mt-1 p-2 border rounded-lg" required />
+        </div>
+      </div>
+      <div class="mt-4">
+        <button class="px-4 py-2 bg-primary-600 text-white rounded-lg">{% if action == 'edit' %}Save{% else %}Create{% endif %}</button>
+        <a href="/companies/" class="ml-2 px-4 py-2 border rounded-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

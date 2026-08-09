@@ -16,36 +16,9 @@
     </a>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Acme Corp</h3>
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-            Active
-          </span>
-        </div>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Technology company focused on software development</p>
-        <div class="space-y-2 text-sm">
-          <div class="flex justify-between">
-            <span class="text-gray-500 dark:text-gray-400">Employees:</span>
-            <span class="font-medium text-gray-900 dark:text-white">250</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500 dark:text-gray-400">Active Jobs:</span>
-            <span class="font-medium text-gray-900 dark:text-white">8</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500 dark:text-gray-400">Branches:</span>
-            <span class="font-medium text-gray-900 dark:text-white">3</span>
-          </div>
-        </div>
-      </div>
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-        <a href="#" class="flex-1 text-center py-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">View</a>
-        <a href="#" class="flex-1 text-center py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white font-medium">Edit</a>
-      </div>
-    </div>
-  </div>
+  {# Use dynamic table partial to render companies list; fallback to card grid when fields absent #}
+  {% from 'partials/dynamic_table.html' import dynamic_table %}
+  {{ dynamic_table(companies, fields, item_url_prefix='/companies/', empty_message='No companies', invite_url='/companies/create') }}
+
 </div>
 {% endblock %}

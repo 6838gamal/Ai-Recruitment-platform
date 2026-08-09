@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Company — AI Recruitment Platform{% endblock %}
+{% block page_title %}Company{% endblock %}
+{% block content %}
+<div class="p-6 max-w-3xl">
+  {% from 'partials/dynamic_detail.html' import dynamic_detail %}
+  {{ dynamic_detail(company, fields, title_attr='name') }}
+  <div class="mt-4">
+    <a href="/companies/{{ company.slug }}/edit" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Edit</a>
+    <a href="/companies/" class="px-4 py-2 border rounded-lg ml-2">Back</a>
+  </div>
+</div>
+{% endblock %}

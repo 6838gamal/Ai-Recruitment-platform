@@ -10,6 +10,10 @@ from app.core.permissions import Permission
 from app.database import get_db
 from app.dependencies import get_current_user_profile, require_permission
 
+# new: import inspection helper and UserProfile model to build dynamic fields
+from app.utils.inspect_model import get_model_fields_sqlalchemy
+from app.modules.users.models import UserProfile
+
 router = APIRouter(prefix="/users", tags=["Users"])
 templates = Jinja2Templates(directory="app/templates")
 
@@ -29,11 +33,14 @@ async def user_list(
         page=page,
         per_page=25,
     )
+    # build dynamic fields metadata for UserProfile
+    fields = get_model_fields_sqlalchemy(UserProfile)
     return templates.TemplateResponse(request, "users/list.html", {
         "users": users,
         "total": total,
         "page": page,
         "current_user": current_user,
+        "fields": fields,
     })
 
 
@@ -43,7 +50,10 @@ async def my_profile(
     current_user=Depends(get_current_user_profile),
 ):
     """Current user's profile page."""
+    # Provide dynamic fields metadata to template so it can render gracefully
+    fields = get_model_fields_sqlalchemy(UserProfile)
     return templates.TemplateResponse(request, "users/profile.html", {
         "profile": current_user,
         "current_user": current_user,
+        "fields": fields,
     })

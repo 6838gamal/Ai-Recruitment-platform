@@ -21,7 +21,7 @@
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input type="search" placeholder="Search name, email..." class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400">
+            <input type="search" placeholder="Search name, email..." class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
             <select class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                 <option value="">All Roles</option>
                 <option value="super_admin">Super Admin</option>
@@ -48,74 +48,104 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                     <tr>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">User</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Role</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Department</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Job Title</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                        {% if fields %}
+                            {% for f in fields %}
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">{{ f.name.replace('_', ' ')|capitalize }}</th>
+                            {% endfor %}
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                        {% else %}
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">User</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Role</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Department</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Job Title</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     {% if users %}
                         {% for user in users %}
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    {% if user.avatar_url %}
-                                        <img src="{{ user.avatar_url }}" alt="{{ user.full_name }}" class="w-10 h-10 rounded-full object-cover">
-                                    {% else %}
-                                        <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-semibold text-sm">
-                                            {{ user.first_name[0] }}{{ user.last_name[0] }}
-                                        </div>
-                                    {% endif %}
-                                    <div>
-                                        <p class="font-medium text-gray-900 dark:text-white">{{ user.full_name }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.user.email if user.user else '—' }}</p>
+                            {% if fields %}
+                                {% for f in fields %}
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                        {% set val = attribute(user, f.name) %}
+                                        {% if val is none %}
+                                            —
+                                        {% elif f.type.lower().find('bool') >= 0 %}
+                                            {{ 'Yes' if val else 'No' }}
+                                        {% elif f.foreign_keys %}
+                                            {{ val.full_name if getattr(val, 'full_name', None) else (val.name if getattr(val, 'name', None) else val) }}
+                                        {% else %}
+                                            {{ val }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <a href="/users/{{ user.id }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">View</a>
+                                        <a href="/users/{{ user.id }}/edit" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Edit</a>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {% if user.role == 'super_admin' %}
-                                        bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
-                                    {% elif user.role == 'company_admin' %}
-                                        bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
-                                    {% elif user.role == 'recruiter' %}
-                                        bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
-                                    {% else %}
-                                        bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300
-                                    {% endif %}
-                                ">
-                                    {{ user.role.replace('_', ' ') | capitalize }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                {{ user.department or '—' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                                    Active
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                {{ user.job_title or '—' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2">
-                                    <a href="/users/{{ user.id }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-                                    <button class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" x-data="{ open: false }">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
+                                </td>
+                            {% else %}
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        {% if user.avatar_url %}
+                                            <img src="{{ user.avatar_url }}" alt="{{ user.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-semibold">
+                                                {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <p class="font-medium text-gray-900 dark:text-white">{{ user.full_name }}</p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ user.user.email if user.user else '—' }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if user.role == 'super_admin' %}
+                                            bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
+                                        {% elif user.role == 'company_admin' %}
+                                            bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
+                                        {% elif user.role == 'recruiter' %}
+                                            bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                                        {% else %}
+                                            bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300
+                                        {% endif %}
+                                    ">
+                                        {{ user.role.replace('_', ' ') | capitalize }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ user.department or '—' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                                        Active
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                    {{ user.job_title or '—' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <a href="/users/{{ user.id }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.0..."/>
+                                            </svg>
+                                        </a>
+                                        <button class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2..."/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     {% else %}
@@ -123,7 +153,7 @@
                         <td colspan="6" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-"/>
                                 </svg>
                                 <p class="text-gray-500 dark:text-gray-400 font-medium">No team members</p>
                                 <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Invite your first team member to get started</p>
