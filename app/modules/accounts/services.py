@@ -193,3 +193,35 @@ class AuthService(BaseService):
         # Revoke all other sessions
         self.refresh_repo.revoke_all_for_user(user.id)
         self.db.commit()
+
+
+# --- AccountService: administrative operations for accounts ---
+class AccountService(BaseService):
+    """Administrative account management (list/create/update users)."""
+
+    def __init__(self, db: Session):
+        super().__init__(db)
+        self.user_repo = UserRepository(db)
+
+    def list_accounts(self, skip: int = 0, limit: int = 100):
+        """List user accounts (excludes soft-deleted by default)."""
+        return self.user_repo.get_all(skip=skip, limit=limit)
+
+    def get_account_by_id(self, id: Optional[str]):
+        """Get an account by UUID or return None."""
+        if id is None:
+            return None
+        try:
+            import uuid
+            uid = uuid.UUID(id) if not isinstance(id, uuid.UUID) else id
+        except Exception:
+            return None
+        return self.user_repo.get_by_id(uid)
+
+    def create_account(self, data: dict):
+        """Create a user account. Expects hashed password externally or use repo helper."""
+        return self.user_repo.create(data)
+
+    def update_account(self, account: User, data: dict):
+        """Update account fields."""
+        return self.user_repo.update(account, data)
