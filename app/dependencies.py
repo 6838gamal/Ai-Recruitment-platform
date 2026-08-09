@@ -3,6 +3,7 @@ import uuid
 from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -31,9 +32,13 @@ async def get_current_user_id(request: Request) -> uuid.UUID:
     """
     Dependency: Extract and validate the JWT, return the user's UUID.
     Raises 401 if token is missing or invalid.
+    
+    للصفحات المرئية (HTML): يعيد قيمة 401 ستتم معالجتها بواسطة exception handler
+    للـ API: يعيد JSON error
     """
     token = get_token_from_request(request)
     if not token:
+        # رمز مخصص للإشارة إلى عدم وجود جلسة
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -72,6 +77,8 @@ async def get_current_user_profile(
     """
     Dependency: Returns the full UserProfile ORM object for the current user.
     Import UserProfile lazily to avoid circular imports.
+    
+    إذا كانت الجلسة منتهية أو غير صحيحة، يرفع استثناء 401
     """
     from app.modules.users.repositories import UserProfileRepository
 
