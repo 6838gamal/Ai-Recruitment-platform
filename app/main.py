@@ -293,7 +293,7 @@ from app.modules.ai_matching import models as _ai_models
 from app.modules.settings import models as _settings_models
 
 
-from app.modules.accounts.routes import router as auth_router
+from app.modules.accounts.auth_routes import router as auth_router
 from app.modules.users.routes import router as users_router
 from app.modules.companies.routes import router as companies_router
 from app.modules.jobs.routes import router as jobs_router
