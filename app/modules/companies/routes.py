@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import Optional
 
 from app.core.permissions import Permission
@@ -35,15 +36,20 @@ async def company_list(
 async def company_create_get(request: Request, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
     # render create form
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user})
+    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": None})
 
 
 @router.post("/create")
 async def company_create_post(request: Request, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
     service = CompanyService(db)
-    data = {"name": name, "slug": slug}
-    company = service.create_company(data)
-    db.commit()
+    data = {"name": name.strip(), "slug": slug.strip()}
+    try:
+        company = service.create_company(data)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        fields = get_model_fields_sqlalchemy(Company)
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or invalid data"})
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
 
 
@@ -68,11 +74,19 @@ async def company_detail(request: Request, identifier: str, db: Session = Depend
 @router.get("/{identifier}/edit", response_class=HTMLResponse, name="companies:edit")
 async def company_edit_get(request: Request, identifier: str, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
     service = CompanyService(db)
-    company = service.get_by_slug(identifier) or (service.get_by_id(identifier) if identifier else None)
+    # Try slug first, then UUID id
+    company = service.get_by_slug(identifier)
+    if not company:
+        try:
+            import uuid
+            uid = uuid.UUID(identifier)
+            company = service.get_by_id(uid)
+        except Exception:
+            company = None
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user})
+    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": None})
 
 
 @router.post("/{identifier}/edit")
@@ -88,7 +102,12 @@ async def company_edit_post(request: Request, identifier: str, name: str = Form(
             company = None
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    data = {"name": name, "slug": slug}
-    updated = service.update_company(company, data)
-    db.commit()
+    data = {"name": name.strip(), "slug": slug.strip()}
+    try:
+        updated = service.update_company(company, data)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        fields = get_model_fields_sqlalchemy(Company)
+        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug already exists or invalid data"})
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)

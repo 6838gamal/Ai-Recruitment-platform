@@ -4,6 +4,9 @@
 {% block content %}
 <div class="p-6 max-w-2xl">
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+    {% if error %}
+      <div class="mb-4 p-3 bg-red-50 text-red-700 border border-red-100 rounded">{{ error }}</div>
+    {% endif %}
     <form method="post" action="{% if action == 'edit' %}/companies/{{ company.slug }}/edit{% else %}/companies/create{% endif %}">
       <div class="grid grid-cols-1 gap-4">
         <div>
