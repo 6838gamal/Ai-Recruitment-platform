@@ -23,9 +23,9 @@
         </tr>
       </thead>
       <tbody>
-        {% for idx, c in enumerate(companies, start=1) %}
+        {% for idx, c in companies|list|dictsort|reverse %}
         <tr id="company-row-{{ c.id }}">
-          <td>{{ idx }}</td>
+          <td>{{ loop.index }}</td>
           <td><a href="/companies/{{ c.slug }}">{{ c.name }}</a></td>
           <td>{{ c.slug }}</td>
           <td>{{ c.industry or '-' }}</td>
