@@ -1,3 +1,4 @@
+<%-- Partial dynamic table updated to prefer slug over id for item links --%>
 {% macro dynamic_table(items, fields, item_url_prefix='', empty_message='No items', invite_url=None) %}
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
   <div class="overflow-x-auto">
@@ -36,15 +37,17 @@
                 {% endfor %}
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
-                    <a href="{{ item_url_prefix }}{{ item.id }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">View</a>
-                    <a href="{{ item_url_prefix }}{{ item.id }}/edit" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Edit</a>
+                    {% set identifier = getattr(item, 'slug', None) or getattr(item, 'id', None) %}
+                    <a href="{{ item_url_prefix }}{{ identifier }}" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">View</a>
+                    <a href="{{ item_url_prefix }}{{ identifier }}/edit" class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Edit</a>
                   </div>
                 </td>
               {% else %}
                 <td class="px-6 py-4">{{ item }}</td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
-                    <a href="{{ item_url_prefix }}{{ item.id }}" class="p-2 text-gray-600 hover:text-gray-900">View</a>
+                    {% set identifier = getattr(item, 'slug', None) or getattr(item, 'id', None) %}
+                    <a href="{{ item_url_prefix }}{{ identifier }}" class="p-2 text-gray-600 hover:text-gray-900">View</a>
                   </div>
                 </td>
               {% endif %}
