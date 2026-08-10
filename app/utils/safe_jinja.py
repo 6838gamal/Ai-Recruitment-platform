@@ -70,11 +70,12 @@ def make_safe_templates(directory: str = "app/templates") -> Jinja2Templates:
             return safe
 
         def _safe_get_template(name, globals=None):
-            # Avoid forcing dict(...) conversion of `globals` which can turn
-            # complex mapping-like objects into tuples or otherwise change
-            # their structure and produce unhashable keys. Let _sanitize_globals
-            # handle mapping-like inputs directly.
-            return _orig_get_template(name, _sanitize_globals(globals))
+            # To avoid putting potentially unhashable runtime context into Jinja2's
+            # template cache key, do not pass 'globals' to get_template. Instead,
+            # resolve the template by name only; the rendering context will be
+            # supplied later when Template.render() is called. This prevents
+            # TypeError from Jinja2 cache when context contains nested dicts/lists.
+            return _orig_get_template(name)
 
         env.get_template = _safe_get_template
 
