@@ -23,13 +23,12 @@ templates = Jinja2Templates(directory="app/templates")
 def render_template(name: str, context: dict, status_code: Optional[int] = None):
     """Safe template renderer that prefers TemplateResponse but falls back to manual render on TypeError.
 
-    This avoids Jinja2 cache-key TypeError issues by ensuring the correct TemplateResponse
-    signature is used and providing a fallback render path.
+    Uses positional args for TemplateResponse to be compatible across starlette/jinja2 versions.
     """
     try:
         if status_code is not None:
-            return templates.TemplateResponse(name=name, context=context, status_code=status_code)
-        return templates.TemplateResponse(name=name, context=context)
+            return templates.TemplateResponse(name, context, status_code=status_code)
+        return templates.TemplateResponse(name, context)
     except TypeError as exc:
         logging.exception("TemplateResponse TypeError for %s: %s", name, exc)
         try:
@@ -84,15 +83,22 @@ async def company_create_get(
 
 @router.post("/create")
 async def company_create_post(
-    request: Request, 
-    name: str = Form(...), 
-    slug: str = Form(...), 
+    request: Request,
     db: Session = Depends(get_db), 
     current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
 ):
-    """Create new company."""
+    """Create new company (dynamic form handling)."""
     service = CompanyService(db)
-    data = {"name": name.strip(), "slug": slug.strip()}
+
+    form = await request.form()
+    data = {}
+    for k, v in form.items():
+        # checkbox values set to '1' in template -> True
+        if v == "1":
+            data[k] = True
+        else:
+            data[k] = v.strip() if isinstance(v, str) else v
+
     try:
         company = service.create_company(data)
         db.commit()
@@ -106,7 +112,8 @@ async def company_create_post(
                 "fields": fields, 
                 "action": "create", 
                 "current_user": current_user, 
-                "error": "Slug already exists or invalid data"
+                "error": "Slug already exists or invalid data",
+                "form_values": data,
             },
             status_code=400,
         )
@@ -185,12 +192,10 @@ async def company_edit_get(
 async def company_edit_post(
     request: Request, 
     identifier: str, 
-    name: str = Form(...), 
-    slug: str = Form(...), 
     db: Session = Depends(get_db), 
     current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
 ):
-    """Update company."""
+    """Update company (dynamic form handling)."""
     service = CompanyService(db)
     company = service.get_by_slug(identifier)
     if not company:
@@ -202,8 +207,15 @@ async def company_edit_post(
     
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    
-    data = {"name": name.strip(), "slug": slug.strip()}
+
+    form = await request.form()
+    data = {}
+    for k, v in form.items():
+        if v == "1":
+            data[k] = True
+        else:
+            data[k] = v.strip() if isinstance(v, str) else v
+
     try:
         updated = service.update_company(company, data)
         db.commit()
@@ -218,7 +230,8 @@ async def company_edit_post(
                 "fields": fields, 
                 "action": "edit", 
                 "current_user": current_user, 
-                "error": "Slug already exists or invalid data"
+                "error": "Slug already exists or invalid data",
+                "form_values": data,
             },
             status_code=400,
         )
