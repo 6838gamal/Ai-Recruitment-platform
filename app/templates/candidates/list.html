@@ -1,24 +1,42 @@
 {% extends "base.html" %}
-{% block title %}Candidates — AI Recruitment Platform{% endblock %}
-{% block page_title %}Candidates{% endblock %}
-
 {% block content %}
-<div class="p-6">
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Candidates</h2>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage candidate profiles and resumes</p>
+  <h1>Candidates</h1>
+
+  <p><a href="{{ request.url_for('candidates:create') }}">Create candidate</a></p>
+
+  {% if not candidates %}
+    <p>No candidates found.</p>
+  {% else %}
+    <table class="table">
+      <thead>
+        <tr>
+          {% for f in fields %}
+            <th>{{ f }}</th>
+          {% endfor %}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidates %}
+          <tr>
+            {% for f in fields %}
+              <td>{{ attribute(c, f) | default("") }}</td>
+            {% endfor %}
+            <td>
+              <a href="{{ request.url_for('candidates:view', candidate_id=str(c.id)) }}">View</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      {% if page > 1 %}
+        <a href="{{ request.url_for('candidates:list') }}?page={{ page - 1 }}">Previous</a>
+      {% endif %}
+      {% if (page * 25) < total %}
+        <a href="{{ request.url_for('candidates:list') }}?page={{ page + 1 }}">Next</a>
+      {% endif %}
     </div>
-    <a href="/candidates/create" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      New Candidate
-    </a>
-  </div>
-
-  {% from 'partials/dynamic_table.html' import dynamic_table %}
-  {{ dynamic_table(candidates, fields, item_url_prefix='/candidates/', empty_message='No candidates', invite_url='/candidates/create') }}
-
-</div>
+  {% endif %}
 {% endblock %}
