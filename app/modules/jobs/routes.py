@@ -133,3 +133,30 @@ async def job_create_post(
         )
 
     return RedirectResponse(url=f"/jobs/{job.id}", status_code=303)
+
+
+@router.get("/{identifier}", response_class=HTMLResponse, name="jobs:detail")
+async def job_detail(
+    request: Request,
+    identifier: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.VIEW_JOBS)),
+):
+    """Show job detail by UUID identifier."""
+    service = JobService(db)
+    try:
+        uid = uuid.UUID(identifier)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    company_id = getattr(current_user, "company_id", None)
+    job = service.get_job_by_id(uid, company_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    fields = get_model_fields_sqlalchemy(JobPosting)
+    return render_template(
+        request,
+        "jobs/detail.html",
+        {"job": job, "fields": fields, "current_user": current_user},
+    )
