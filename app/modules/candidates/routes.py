@@ -1,6 +1,6 @@
 """Candidates module routes."""
 
-import uuid
+from uuid import UUID
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -52,41 +52,7 @@ async def candidate_list(
     return templates.TemplateResponse(request=request, name="candidates/list.html", context=sanitize_context(context))
 
 
-@router.get(
-    "/{candidate_id}",
-    response_class=HTMLResponse,
-    name="candidates:view",
-)
-async def candidate_view(
-    request: Request,
-    candidate_id: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission(Permission.VIEW_CANDIDATES)),
-):
-    """Candidate detail view."""
-    try:
-        candidate_uuid = uuid.UUID(candidate_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid candidate ID")
-
-    service = CandidateService(db)
-    candidate = service.get_candidate_by_id(candidate_uuid, current_user.company_id)
-
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
-
-    fields = get_model_fields_sqlalchemy(Candidate)
-
-    context = {
-        "request": request,
-        "candidate": candidate,
-        "current_user": current_user,
-        "fields": fields,
-    }
-
-    return templates.TemplateResponse(request=request, name="candidates/view.html", context=sanitize_context(context))
-
-
+# --- Create routes first to avoid matching "create" as a dynamic candidate_id ---
 @router.get(
     "/create",
     response_class=HTMLResponse,
@@ -140,21 +106,48 @@ async def candidate_create_submit(
     return RedirectResponse(url=f"/candidates/{candidate.id}", status_code=303)
 
 
+# --- Dynamic candidate routes (use UUID type so FastAPI validates input) ---
+@router.get(
+    "/{candidate_id}",
+    response_class=HTMLResponse,
+    name="candidates:view",
+)
+async def candidate_view(
+    request: Request,
+    candidate_id: UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.VIEW_CANDIDATES)),
+):
+    """Candidate detail view."""
+    # candidate_id is already a uuid.UUID instance (validated by FastAPI)
+    service = CandidateService(db)
+    candidate = service.get_candidate_by_id(candidate_id, current_user.company_id)
+
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    fields = get_model_fields_sqlalchemy(Candidate)
+
+    context = {
+        "request": request,
+        "candidate": candidate,
+        "current_user": current_user,
+        "fields": fields,
+    }
+
+    return templates.TemplateResponse(request=request, name="candidates/view.html", context=sanitize_context(context))
+
+
 # --- Edit form (GET) ---
 @router.get("/{candidate_id}/edit", response_class=HTMLResponse, name="candidates:edit_form")
 async def candidate_edit_form(
     request: Request,
-    candidate_id: str,
+    candidate_id: UUID,
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
-    try:
-        candidate_uuid = uuid.UUID(candidate_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid candidate ID")
-
     service = CandidateService(db)
-    candidate = service.get_candidate_by_id(candidate_uuid, current_user.company_id)
+    candidate = service.get_candidate_by_id(candidate_id, current_user.company_id)
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
@@ -167,40 +160,30 @@ async def candidate_edit_form(
 @router.post("/{candidate_id}/edit", name="candidates:edit_submit")
 async def candidate_edit_submit(
     request: Request,
-    candidate_id: str,
+    candidate_id: UUID,
     first_name: str = Form(...),
     last_name: str = Form(""),
     email: str = Form(...),
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
-    try:
-        candidate_uuid = uuid.UUID(candidate_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid candidate ID")
-
     service = CandidateService(db)
-    updated = service.update_candidate(candidate_uuid, current_user.company_id, first_name=first_name, last_name=last_name, email=email)
+    updated = service.update_candidate(candidate_id, current_user.company_id, first_name=first_name, last_name=last_name, email=email)
     if not updated:
         raise HTTPException(status_code=404, detail="Candidate not found")
-    return RedirectResponse(url=request.url_for("candidates:view", candidate_id=str(candidate_uuid)), status_code=303)
+    return RedirectResponse(url=request.url_for("candidates:view", candidate_id=str(candidate_id)), status_code=303)
 
 
 # --- Delete (soft delete) ---
 @router.post("/{candidate_id}/delete", name="candidates:delete")
 async def candidate_delete(
     request: Request,
-    candidate_id: str,
+    candidate_id: UUID,
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
-    try:
-        candidate_uuid = uuid.UUID(candidate_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid candidate ID")
-
     service = CandidateService(db)
-    deleted = service.delete_candidate(candidate_uuid, current_user.company_id)
+    deleted = service.delete_candidate(candidate_id, current_user.company_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Candidate not found")
     return RedirectResponse(url=request.url_for("candidates:list"), status_code=303)

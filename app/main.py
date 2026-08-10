@@ -150,8 +150,11 @@ if env is not None:
         return safe
 
     def _safe_get_template(name, globals=None):
-        # Ensure any globals passed to get_template are sanitized first.
-        return _orig_get_template(name, _sanitize_globals(globals))
+        # Avoid passing per-call globals to Jinja2's get_template to prevent
+        # unhashable objects from entering the template cache key. Starlette's
+        # TemplateResponse will still work because we only control template
+        # lookup here; template rendering receives the context later.
+        return _orig_get_template(name)
 
     # Patch the environment's get_template in place.
     env.get_template = _safe_get_template
