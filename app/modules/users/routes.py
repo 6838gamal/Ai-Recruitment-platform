@@ -27,6 +27,7 @@ async def user_list(
 ):
     """User list page."""
     from app.modules.users.services import UserService
+
     service = UserService(db)
     users, total = service.list_users(
         company_id=current_user.company_id,
@@ -35,17 +36,21 @@ async def user_list(
     )
     # build dynamic fields metadata for UserProfile
     fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        "users/list.html",
-        {
-            "request": request,
-            "users": users,
-            "total": total,
-            "page": page,
-            "current_user": current_user,
-            "fields": fields,
-        },
+
+    # Render template manually to avoid passing the full context dict into
+    # Jinja2's get_template (some starlette/jinja2 versions pass the context
+    # through to get_template leading to an unhashable dict inside the
+    # template cache key).
+    template = templates.env.get_template("users/list.html")
+    content = template.render(
+        request=request,
+        users=users,
+        total=total,
+        page=page,
+        current_user=current_user,
+        fields=fields,
     )
+    return HTMLResponse(content)
 
 
 @router.get("/profile", response_class=HTMLResponse, name="users:profile")
@@ -56,12 +61,12 @@ async def my_profile(
     """Current user's profile page."""
     # Provide dynamic fields metadata to template so it can render gracefully
     fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        "users/profile.html",
-        {
-            "request": request,
-            "profile": current_user,
-            "current_user": current_user,
-            "fields": fields,
-        },
+
+    template = templates.env.get_template("users/profile.html")
+    content = template.render(
+        request=request,
+        profile=current_user,
+        current_user=current_user,
+        fields=fields,
     )
+    return HTMLResponse(content)
