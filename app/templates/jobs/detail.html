@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Job Detail — AI Recruitment Platform{% endblock %}
+{% block page_title %}Job Detail{% endblock %}
+
+{% block content %}
+<div class="p-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold">{{ job.title }}</h2>
+    <p class="text-sm text-gray-500">Status: {{ job.status }}</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <h3 class="font-semibold">Description</h3>
+      <div class="mt-2 prose">
+        {{ job.description }}
+      </div>
+    </div>
+
+    <div>
+      <h3 class="font-semibold">Details</h3>
+      <table class="table-auto w-full mt-2">
+        <tbody>
+          <tr>
+            <td class="font-medium">Headcount</td>
+            <td>{{ job.headcount }}</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Salary</td>
+            <td>
+              {% if job.salary_min and job.salary_max %}
+                {{ job.salary_min }} - {{ job.salary_max }} {{ job.salary_currency }}
+              {% elif job.salary_min %}
+                From {{ job.salary_min }} {{ job.salary_currency }}
+              {% elif job.salary_max %}
+                Up to {{ job.salary_max }} {{ job.salary_currency }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="font-medium">Employment type</td>
+            <td>{{ job.employment_type or '—' }}</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Work type</td>
+            <td>{{ job.work_type or '—' }}</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Requirements</td>
+            <td>{{ job.requirements or '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <a href="/jobs" class="btn btn-secondary">Back to jobs</a>
+    <!-- Edit/Delete buttons could be added here based on permissions -->
+  </div>
+</div>
+{% endblock %}
