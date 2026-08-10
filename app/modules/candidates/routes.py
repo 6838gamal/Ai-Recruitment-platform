@@ -1,4 +1,3 @@
-
 """Candidates module routes."""
 
 from fastapi import APIRouter, Depends, Request
@@ -47,7 +46,7 @@ async def candidate_list(
 async def candidate_create_form(
     request: Request,
     current_user=Depends(
-        require_permission(Permission.CREATE_CANDIDATES)
+        require_permission(Permission.MANAGE_CANDIDATES)
     ),
 ):
     """Render the candidate creation form."""
@@ -64,7 +63,7 @@ async def candidate_create_form(
 async def candidate_create_submit(
     request: Request,
     current_user=Depends(
-        require_permission(Permission.CREATE_CANDIDATES)
+        require_permission(Permission.MANAGE_CANDIDATES)
     ),
 ):
     """Handle candidate form submission.
