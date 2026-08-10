@@ -1,8 +1,4 @@
-"""AI Matching module services."""
-from sqlalchemy.orm import Session
-from app.core.base.service import BaseService
+"""AI Matching business logic services"""
 
-
-class AIMatchingService(BaseService):
-    def __init__(self, db: Session):
-        super().__init__(db)
+class AIMatchingService:
+    pass

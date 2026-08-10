@@ -1,8 +1,4 @@
-"""Billing module services."""
-from sqlalchemy.orm import Session
-from app.core.base.service import BaseService
+"""Billing business logic services"""
 
-
-class BillingService(BaseService):
-    def __init__(self, db: Session):
-        super().__init__(db)
+class BillingService:
+    pass

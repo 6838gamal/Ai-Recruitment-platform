@@ -1,20 +1,7 @@
-"""Reports module routes."""
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-
-from app.core.permissions import Permission
-from app.dependencies import require_permission
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
-templates = Jinja2Templates(directory="app/templates")
 
-
-@router.get("/", response_class=HTMLResponse, name="reports:index")
-async def reports_index(
-    request: Request,
-    current_user=Depends(require_permission(Permission.VIEW_REPORTS)),
-):
-    return templates.TemplateResponse(request, "reports/index.html", {
-        "current_user": current_user
-    })
+@router.get("/")
+async def list_reports():
+    return {"message": "Reports list endpoint"}
