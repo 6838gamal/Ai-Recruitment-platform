@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
+import uuid
 
 from app.core.permissions import Permission
 from app.database import get_db
@@ -22,25 +23,50 @@ async def company_list(
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.VIEW_COMPANIES)),
 ):
+    """List all companies."""
     service = CompanyService(db)
     companies = service.list_companies()
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/list.html", {
-        "current_user": current_user,
-        "companies": companies,
-        "fields": fields,
-    })
+    return templates.TemplateResponse(
+        request, 
+        "companies/list.html", 
+        {
+            "companies": companies,
+            "fields": fields,
+            "current_user": current_user,
+        }
+    )
 
 
 @router.get("/create", response_class=HTMLResponse, name="companies:create")
-async def company_create_get(request: Request, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
-    # render create form
+async def company_create_get(
+    request: Request, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
+):
+    """Render create company form."""
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": None})
+    return templates.TemplateResponse(
+        request, 
+        "companies/form.html", 
+        {
+            "fields": fields, 
+            "action": "create", 
+            "current_user": current_user, 
+            "error": None
+        }
+    )
 
 
 @router.post("/create")
-async def company_create_post(request: Request, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
+async def company_create_post(
+    request: Request, 
+    name: str = Form(...), 
+    slug: str = Form(...), 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
+):
+    """Create new company."""
     service = CompanyService(db)
     data = {"name": name.strip(), "slug": slug.strip()}
     try:
@@ -49,59 +75,110 @@ async def company_create_post(request: Request, name: str = Form(...), slug: str
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "fields": fields, "action": "create", "current_user": current_user, "error": "Slug already exists or is invalid."})
+        return templates.TemplateResponse(
+            request, 
+            "companies/form.html", 
+            {
+                "fields": fields, 
+                "action": "create", 
+                "current_user": current_user, 
+                "error": "Slug already exists or invalid data"
+            },
+            status_code=400
+        )
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
 
 
 @router.get("/{identifier}", response_class=HTMLResponse, name="companies:detail")
-async def company_detail(request: Request, identifier: str, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.VIEW_COMPANIES))):
+async def company_detail(
+    request: Request, 
+    identifier: str, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_permission(Permission.VIEW_COMPANIES))
+):
+    """Get company detail."""
     service = CompanyService(db)
     # Try slug first, then UUID id
     company = service.get_by_slug(identifier)
     if not company:
         try:
-            import uuid
             uid = uuid.UUID(identifier)
             company = service.get_by_id(uid)
-        except Exception:
+        except (ValueError, TypeError):
             company = None
+    
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+    
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/detail.html", {"request": request, "company": company, "fields": fields, "current_user": current_user})
+    return templates.TemplateResponse(
+        request, 
+        "companies/detail.html", 
+        {
+            "company": company, 
+            "fields": fields, 
+            "current_user": current_user
+        }
+    )
 
 
 @router.get("/{identifier}/edit", response_class=HTMLResponse, name="companies:edit")
-async def company_edit_get(request: Request, identifier: str, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
+async def company_edit_get(
+    request: Request, 
+    identifier: str, 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
+):
+    """Render edit company form."""
     service = CompanyService(db)
     # Try slug first, then UUID id
     company = service.get_by_slug(identifier)
     if not company:
         try:
-            import uuid
             uid = uuid.UUID(identifier)
             company = service.get_by_id(uid)
-        except Exception:
+        except (ValueError, TypeError):
             company = None
+    
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+    
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": None})
+    return templates.TemplateResponse(
+        request, 
+        "companies/form.html", 
+        {
+            "company": company, 
+            "fields": fields, 
+            "action": "edit", 
+            "current_user": current_user, 
+            "error": None
+        }
+    )
 
 
 @router.post("/{identifier}/edit")
-async def company_edit_post(request: Request, identifier: str, name: str = Form(...), slug: str = Form(...), db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))):
+async def company_edit_post(
+    request: Request, 
+    identifier: str, 
+    name: str = Form(...), 
+    slug: str = Form(...), 
+    db: Session = Depends(get_db), 
+    current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
+):
+    """Update company."""
     service = CompanyService(db)
     company = service.get_by_slug(identifier)
     if not company:
         try:
-            import uuid
             uid = uuid.UUID(identifier)
             company = service.get_by_id(uid)
-        except Exception:
+        except (ValueError, TypeError):
             company = None
+    
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
+    
     data = {"name": name.strip(), "slug": slug.strip()}
     try:
         updated = service.update_company(company, data)
@@ -109,11 +186,21 @@ async def company_edit_post(request: Request, identifier: str, name: str = Form(
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(request, "companies/form.html", {"request": request, "company": company, "fields": fields, "action": "edit", "current_user": current_user, "error": "Slug already exists or is invalid."})
+        return templates.TemplateResponse(
+            request, 
+            "companies/form.html", 
+            {
+                "company": company, 
+                "fields": fields, 
+                "action": "edit", 
+                "current_user": current_user, 
+                "error": "Slug already exists or invalid data"
+            },
+            status_code=400
+        )
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)
 
 
-# ---------- Delete route (soft-delete) ----------
 @router.post("/{identifier}/delete")
 async def company_delete(
     request: Request,
@@ -121,16 +208,16 @@ async def company_delete(
     db: Session = Depends(get_db),
     current_user=Depends(require_permission(Permission.MANAGE_COMPANIES)),
 ):
+    """Delete company (soft-delete)."""
     service = CompanyService(db)
 
     # Try slug first, then UUID id
     company = service.get_by_slug(identifier)
     if not company:
         try:
-            import uuid
             uid = uuid.UUID(identifier)
             company = service.get_by_id(uid)
-        except Exception:
+        except (ValueError, TypeError):
             company = None
 
     if not company:
