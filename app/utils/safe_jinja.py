@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 # key errors when TemplateResponse passes unhashable globals (e.g. dicts).
 # Expose a module-level `templates` variable for import in routes and main.
 
+
 def make_safe_templates(directory: str = "app/templates") -> Jinja2Templates:
     templates = Jinja2Templates(directory=directory)
     env = getattr(templates, "env", None) or getattr(templates, "environment", None)
@@ -43,8 +44,22 @@ def make_safe_templates(directory: str = "app/templates") -> Jinja2Templates:
                 return id(self._obj)
 
         def _sanitize_globals(globals_mapping):
+            """Return a sanitized mapping of globals where unhashable values are wrapped.
+
+            The function accepts mapping-like objects (with .items()) as well as other
+            values. If globals_mapping is not a mapping, we try to wrap it if necessary.
+            """
             if not globals_mapping:
                 return globals_mapping
+
+            # If it's not mapping-like, try to return a hashable wrapper or the value itself
+            if not hasattr(globals_mapping, "items"):
+                try:
+                    hash(globals_mapping)
+                    return globals_mapping
+                except Exception:
+                    return _HashableWrapper(globals_mapping)
+
             safe = {}
             for k, v in globals_mapping.items():
                 try:
@@ -55,7 +70,11 @@ def make_safe_templates(directory: str = "app/templates") -> Jinja2Templates:
             return safe
 
         def _safe_get_template(name, globals=None):
-            return _orig_get_template(name, _sanitize_globals(dict(globals) if globals else None))
+            # Avoid forcing dict(...) conversion of `globals` which can turn
+            # complex mapping-like objects into tuples or otherwise change
+            # their structure and produce unhashable keys. Let _sanitize_globals
+            # handle mapping-like inputs directly.
+            return _orig_get_template(name, _sanitize_globals(globals))
 
         env.get_template = _safe_get_template
 
