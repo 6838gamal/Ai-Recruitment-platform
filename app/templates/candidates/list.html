@@ -11,7 +11,7 @@
       <thead>
         <tr>
           {% for f in fields %}
-            <th>{{ f }}</th>
+            <th>{{ f['name'] }}</th>
           {% endfor %}
           <th>Actions</th>
         </tr>
@@ -20,7 +20,7 @@
         {% for c in candidates %}
           <tr>
             {% for f in fields %}
-              <td>{{ attribute(c, f) | default("") }}</td>
+              <td>{{ attribute(c, f['name']) | default("") }}</td>
             {% endfor %}
             <td>
               <a href="{{ request.url_for('candidates:view', candidate_id=str(c.id)) }}">View</a>
