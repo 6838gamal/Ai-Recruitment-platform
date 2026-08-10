@@ -3,125 +3,122 @@
 {% block page_title %}Candidates{% endblock %}
 
 {% block content %}
-<div class="p-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Candidates</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your candidates and their profiles</p>
-        </div>
-        <a href="{{ request.url_for('candidates:create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Create Candidate
-        </a>
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Candidates</h2>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage your candidates and their profiles</p>
     </div>
+    <div class="flex items-center gap-3">
+      <a href="{{ request.url_for('candidates:create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Create Candidate
+      </a>
+    </div>
+  </div>
 
-    <!-- Filters (simple placeholder) -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input type="search" placeholder="Search name, email..." class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-            <select class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-            <div></div>
-            <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors">Apply Filters</button>
-        </div>
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <input type="search" name="q" placeholder="Search name, email..." class="px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+      <select name="status" class="px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <div></div>
+      <div class="flex items-center gap-2 justify-end">
+        <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md">Apply</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Candidates Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Candidate</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Email</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Phone</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Location</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Summary</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% if candidates %}
-                    {% for c in candidates %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                {% if c.avatar_url %}
-                                <img src="{{ c.avatar_url }}" alt="{{ c.full_name }}" class="w-10 h-10 rounded-full object-cover">
-                                {% else %}
-                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 font-semibold text-sm">
-                                    {{ c.first_name[0] if c.first_name else '?' }}{{ c.last_name[0] if c.last_name else '' }}
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <p class="font-medium text-gray-900 dark:text-white">{{ c.full_name or 'N/A' }}</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ c.email or '—' }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ c.email or '—' }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ c.phone or '—' }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ c.location or '—' }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ c.summary or '—' }}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-2">
-                                {% set cid = c.id|default(None) %}
-                                {% if cid %}
-                                <a href="{{ request.url_for('candidates:view', candidate_id=str(c.id)) }}" class="inline-flex items-center justify-center p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 dark:text-gray-400 dark:hover:text-white rounded-md">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center justify-center">
-                                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.3[...]/>
-                                </svg>
-                                <p class="text-gray-500 dark:text-gray-400 font-medium">No candidates found</p>
-                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Create your first candidate to get started</p>
-                                <a href="{{ request.url_for('candidates:create') }}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                    </svg>
-                                    Create Candidate
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+  <!-- Candidates Table -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          {% if candidates %}
+            {% for c in candidates %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center gap-3">
+                  {% if c.avatar_url %}
+                    <img src="{{ c.avatar_url }}" alt="{{ c.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                  {% else %}
+                    <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-medium">{{ c.first_name[0] if c.first_name else '?' }}{{ c.last_name[0] if c.last_name else '' }}</div>
+                  {% endif %}
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ c.full_name or 'N/A' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ c.email or '—' }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{{ c.email or '—' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{{ c.phone or '—' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">{{ c.location or '—' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 truncate" style="max-width:30ch">{{ c.summary or '—' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                <div class="flex items-center gap-2">
+                  {% set cid = c.id|default(None) %}
+                  {% if cid %}
+                    <a href="{{ request.url_for('candidates:view', candidate_id=str(c.id)) }}" title="View" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </a>
+                    <a href="{{ request.url_for('candidates:edit_form', candidate_id=str(c.id)) }}" title="Edit" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-yellow-600 hover:bg-gray-50">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h6M4 7h.01M5 11h.01M7 7h.01M7 11h.01"></path></svg>
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center">
+                <div class="flex flex-col items-center justify-center">
+                  <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2"></path></svg>
+                  <p class="text-gray-500 dark:text-gray-400 font-medium">No candidates found</p>
+                  <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Create your first candidate to get started</p>
+                  <a href="{{ request.url_for('candidates:create') }}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Create Candidate
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- Pagination -->
-    {% if candidates %}
-    <div class="mt-6 flex items-center justify-between">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-            Showing <span class="font-medium">1</span> to <span class="font-medium">{{ candidates|length }}</span> of <span class="font-medium">{{ total }}</span> candidates
-        </p>
-        <div class="flex gap-2">
-            {% if page > 1 %}
-            <a href="?page={{ page - 1 }}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Previous</a>
-            {% endif %}
-            {% if candidates|length >= 25 %}
-            <a href="?page={{ page + 1 }}" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">Next</a>
-            {% endif %}
-        </div>
+  <!-- Pagination -->
+  {% if candidates %}
+  <div class="mt-6 flex items-center justify-between">
+    <p class="text-sm text-gray-600 dark:text-gray-400">
+      Showing <span class="font-medium">{{ ((page - 1) * 25) + 1 }}</span> to <span class="font-medium">{{ ((page - 1) * 25) + (candidates|length) }}</span> of <span class="font-medium">{{ total }}</span> candidates
+    </p>
+    <div class="flex gap-2">
+      {% if page > 1 %}
+      <a href="?page={{ page - 1 }}" class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50">Previous</a>
+      {% endif %}
+      {% if candidates|length >= 25 %}
+      <a href="?page={{ page + 1 }}" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700">Next</a>
+      {% endif %}
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
