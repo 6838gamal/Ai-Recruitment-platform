@@ -1,15 +1,14 @@
 """Dashboard module routes."""
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user_profile
+from app.utils.safe_jinja import templates
 from app.utils.template_utils import sanitize_context
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
-templates = Jinja2Templates(directory="app/templates")
 
 # ensure attribute available in templates
 if "attribute" not in templates.env.globals:
