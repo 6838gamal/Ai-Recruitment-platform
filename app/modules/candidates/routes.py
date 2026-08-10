@@ -36,13 +36,20 @@ async def candidate_list(
     skip = (page - 1) * per_page
     candidates = service.get_all_candidates(company_id=current_user.company_id, skip=skip, limit=per_page)
 
-    # get_model_fields_sqlalchemy returns list[dict], convert to list[str] names for templates
-    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
+    # NOTE: return the full column metadata (list[dict]) — some templates expect dicts with 'name'
+    fields = get_model_fields_sqlalchemy(Candidate)
+
+    # Also include a total count for pagination (service may provide this)
+    try:
+        total = service.count_candidates(company_id=current_user.company_id)
+    except Exception:
+        # fallback to page length
+        total = len(candidates)
 
     context = {
         "request": request,
         "candidates": candidates,
-        "total": len(candidates),
+        "total": total,
         "page": page,
         "current_user": current_user,
         "fields": fields,
@@ -74,8 +81,8 @@ async def candidate_view(
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
-    # convert fields to simple names for templates
-    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
+    # pass full metadata for templates that expect dicts
+    fields = get_model_fields_sqlalchemy(Candidate)
 
     context = {
         "request": request,
@@ -97,8 +104,7 @@ async def candidate_create_form(
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
     """Render candidate creation form."""
-    # convert fields to simple names for templates
-    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
+    fields = get_model_fields_sqlalchemy(Candidate)
 
     context = {
         "request": request,
