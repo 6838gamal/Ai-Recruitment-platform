@@ -33,9 +33,9 @@ async def dashboard(
     }
 
     return templates.TemplateResponse(
-        request,
         "dashboard/index.html",
         {
+            "request": request,
             "current_user": current_user,
             "stats": stats,
             "recent_activities": recent_activities,
