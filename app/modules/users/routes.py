@@ -44,7 +44,8 @@ async def user_list(
         "current_user": current_user,
         "fields": fields,
     }
-    return templates.TemplateResponse("users/list.html", sanitize_context(context))
+    # Pass `request` as the first argument to TemplateResponse
+    return templates.TemplateResponse(request, "users/list.html", sanitize_context(context))
 
 
 @router.get("/profile", response_class=HTMLResponse, name="users:profile")
@@ -60,4 +61,5 @@ async def my_profile(
         "current_user": current_user,
         "fields": fields,
     }
-    return templates.TemplateResponse("users/profile.html", sanitize_context(context))
+    # Pass `request` as the first argument to TemplateResponse
+    return templates.TemplateResponse(request, "users/profile.html", sanitize_context(context))
