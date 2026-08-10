@@ -35,13 +35,17 @@ async def user_list(
     )
     # build dynamic fields metadata for UserProfile
     fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(request, "users/list.html", {
-        "users": users,
-        "total": total,
-        "page": page,
-        "current_user": current_user,
-        "fields": fields,
-    })
+    return templates.TemplateResponse(
+        "users/list.html",
+        {
+            "request": request,
+            "users": users,
+            "total": total,
+            "page": page,
+            "current_user": current_user,
+            "fields": fields,
+        }
+    )
 
 
 @router.get("/profile", response_class=HTMLResponse, name="users:profile")
@@ -52,8 +56,12 @@ async def my_profile(
     """Current user's profile page."""
     # Provide dynamic fields metadata to template so it can render gracefully
     fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(request, "users/profile.html", {
-        "profile": current_user,
-        "current_user": current_user,
-        "fields": fields,
-    })
+    return templates.TemplateResponse(
+        "users/profile.html",
+        {
+            "request": request,
+            "profile": current_user,
+            "current_user": current_user,
+            "fields": fields,
+        }
+    )
