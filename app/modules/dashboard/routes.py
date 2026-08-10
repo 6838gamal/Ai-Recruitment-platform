@@ -1,4 +1,5 @@
 """Dashboard module routes."""
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -7,28 +8,47 @@ from app.database import get_db
 from app.dependencies import get_current_user_profile
 from app.utils.safe_jinja import templates
 
+
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
-# ensure attribute available in templates
+
+# Ensure attribute is available in templates
 if "attribute" not in templates.env.globals:
     templates.env.globals["attribute"] = getattr
 
-# Register both "" and "/" so clients won't get 405 due to trailing-slash mismatches
-@router.get("", include_in_schema=False)
-@router.get("/", response_class=HTMLResponse, name="dashboard:index")
+
+# Support both /dashboard and /dashboard/
+@router.get(
+    "",
+    response_class=HTMLResponse,
+    include_in_schema=False,
+)
+@router.get(
+    "/",
+    response_class=HTMLResponse,
+    name="dashboard:index",
+)
 async def dashboard(
     request: Request,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user_profile),
 ):
     """Main dashboard page with dynamic data."""
+
     from app.modules.dashboard.services import DashboardService
 
     service = DashboardService(db)
-    stats = service.get_stats(current_user.company_id)
-    recent_activities = service.get_recent_activities(current_user.company_id)
 
-    # Permissions for quick actions (replace with real permission checks as needed)
+    stats = service.get_stats(
+        current_user.company_id
+    )
+
+    recent_activities = service.get_recent_activities(
+        current_user.company_id
+    )
+
+    # Permissions for quick actions.
+    # Replace these with real permission checks when available.
     permissions = {
         "can_create_jobs": True,
         "can_create_candidates": True,
@@ -44,6 +64,8 @@ async def dashboard(
         "permissions": permissions,
     }
 
-    # Use the shared safe_jinja.templates instance which sanitizes globals inside env.get_template.
-    # Pass the plain context dict directly (don't pre-wrap it) to avoid creating unhashable cache keys.
-    return templates.TemplateResponse("dashboard/index.html", context)
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard/index.html",
+        context=context,
+    )
