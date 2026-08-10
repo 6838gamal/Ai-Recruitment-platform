@@ -1,4 +1,5 @@
 """Candidates module services."""
+from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 
@@ -27,6 +28,13 @@ class CandidateService(BaseService):
         total = self.db.execute(count_stmt).scalar_one()
         return candidates, total
 
+    def count_candidates(self, company_id):
+        stmt = select(func.count()).select_from(Candidate).where(
+            Candidate.company_id == company_id,
+            Candidate.deleted_at.is_(None),
+        )
+        return self.db.execute(stmt).scalar_one()
+
     def get_candidate_by_id(self, candidate_id, company_id):
         """Get a single candidate by ID."""
         stmt = select(Candidate).where(
@@ -50,6 +58,35 @@ class CandidateService(BaseService):
             self.db.commit()
             self.db.refresh(candidate)
             return candidate
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def update_candidate(self, candidate_id, company_id, **attrs):
+        """Update candidate fields and return the updated instance, or None if not found."""
+        candidate = self.get_candidate_by_id(candidate_id, company_id)
+        if not candidate:
+            return None
+        for k, v in attrs.items():
+            if hasattr(candidate, k):
+                setattr(candidate, k, v)
+        try:
+            self.db.commit()
+            self.db.refresh(candidate)
+            return candidate
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def delete_candidate(self, candidate_id, company_id):
+        """Soft-delete a candidate by setting deleted_at. Returns True if deleted."""
+        candidate = self.get_candidate_by_id(candidate_id, company_id)
+        if not candidate:
+            return False
+        candidate.deleted_at = datetime.utcnow()
+        try:
+            self.db.commit()
+            return True
         except Exception:
             self.db.rollback()
             raise
