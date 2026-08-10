@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user_profile
 from app.utils.safe_jinja import templates
-from app.utils.template_utils import sanitize_context
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -45,4 +44,6 @@ async def dashboard(
         "permissions": permissions,
     }
 
-    return templates.TemplateResponse("dashboard/index.html", sanitize_context(context))
+    # Use the shared safe_jinja.templates instance which sanitizes globals inside env.get_template.
+    # Pass the plain context dict directly (don't pre-wrap it) to avoid creating unhashable cache keys.
+    return templates.TemplateResponse("dashboard/index.html", context)
