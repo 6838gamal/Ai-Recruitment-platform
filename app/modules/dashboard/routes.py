@@ -15,6 +15,8 @@ templates = Jinja2Templates(directory="app/templates")
 if "attribute" not in templates.env.globals:
     templates.env.globals["attribute"] = getattr
 
+# Register both "" and "/" so clients won't get 405 due to trailing-slash mismatches
+@router.get("", include_in_schema=False)
 @router.get("/", response_class=HTMLResponse, name="dashboard:index")
 async def dashboard(
     request: Request,
