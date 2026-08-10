@@ -3,27 +3,20 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.core.permissions import Permission
 from app.database import get_db
 from app.dependencies import get_current_user_profile, require_permission
 
-# new: import inspection helper and UserProfile model to build dynamic fields
 from app.utils.inspect_model import get_model_fields_sqlalchemy
 from app.modules.users.models import UserProfile
 
+# استيراد المصنع الآمن والدالة المعقمة
+from app.utils.safe_jinja import templates
+from app.utils.template_utils import sanitize_context
+
 router = APIRouter(prefix="/users", tags=["Users"])
-# Create Jinja2Templates but disable Jinja2's internal template cache to avoid
-# an issue where unhashable objects in the template globals can end up inside
-# the cache key and raise TypeError. Disabling the cache preserves Starlette's
-# TemplateResponse behavior while avoiding the Jinja2 cache-key bug.
-templates = Jinja2Templates(directory="app/templates")
-# Prevent Jinja2 from using a cache key that may include unhashable objects
-# (e.g., request, complex models). A cache_size of 0 disables the template
-# cache and avoids TypeError when TemplateResponse passes context to get_template.
-templates.env.cache_size = 0
 
 
 @router.get("/", response_class=HTMLResponse, name="users:list")
@@ -35,29 +28,23 @@ async def user_list(
 ):
     """User list page."""
     from app.modules.users.services import UserService
-
     service = UserService(db)
     users, total = service.list_users(
         company_id=current_user.company_id,
         page=page,
         per_page=25,
     )
-    # build dynamic fields metadata for UserProfile
     fields = get_model_fields_sqlalchemy(UserProfile)
-    # Use Starlette's TemplateResponse to preserve middleware and deferred
-    # rendering behavior while avoiding the Jinja2 cache key issue by having
-    # disabled Jinja2's internal cache above.
-    return templates.TemplateResponse(
-        "users/list.html",
-        {
-            "request": request,
-            "users": users,
-            "total": total,
-            "page": page,
-            "current_user": current_user,
-            "fields": fields,
-        },
-    )
+
+    context = {
+        "request": request,
+        "users": users,
+        "total": total,
+        "page": page,
+        "current_user": current_user,
+        "fields": fields,
+    }
+    return templates.TemplateResponse("users/list.html", sanitize_context(context))
 
 
 @router.get("/profile", response_class=HTMLResponse, name="users:profile")
@@ -66,14 +53,11 @@ async def my_profile(
     current_user=Depends(get_current_user_profile),
 ):
     """Current user's profile page."""
-    # Provide dynamic fields metadata to template so it can render gracefully
     fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        "users/profile.html",
-        {
-            "request": request,
-            "profile": current_user,
-            "current_user": current_user,
-            "fields": fields,
-        },
-    )
+    context = {
+        "request": request,
+        "profile": current_user,
+        "current_user": current_user,
+        "fields": fields,
+    }
+    return templates.TemplateResponse("users/profile.html", sanitize_context(context))
