@@ -10,10 +10,8 @@
     <form method="post" action="{% if action == 'edit' %}/companies/{{ company.slug }}/edit{% else %}/companies/create{% endif %}">
       <div class="grid grid-cols-1 gap-4">
         {% for f in fields %}
-          {# Skip common system fields and primary keys #}
-          {% if f.primary_key or f.name in ['id','created_at','updated_at','deleted_at'] %}
-            {% continue %}
-          {% endif %}
+          {# Render field only if it's not a primary/system field. Avoid using 'continue' which isn't supported in some Jinja versions #}
+          {% if not (f.primary_key or f.name in ['id','created_at','updated_at','deleted_at']) %}
 
           <div>
             <label class="text-sm text-gray-500">{{ f.name.replace('_',' ')|capitalize }}</label>
@@ -29,6 +27,8 @@
               <input type="text" name="{{ f.name }}" value="{{ value|default('') }}" class="w-full mt-1 p-2 border rounded-lg" {% if f.name in ['name','slug'] %}required{% endif %} />
             {% endif %}
           </div>
+
+          {% endif %}
         {% endfor %}
       </div>
       <div class="mt-4">
