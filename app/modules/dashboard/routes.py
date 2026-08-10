@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user_profile
+from app.utils.safe_jinja import templates
+from app.utils.template_utils import sanitize_context
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 templates = Jinja2Templates(directory="app/templates")
@@ -15,11 +17,16 @@ if "attribute" not in templates.env.globals:
     templates.env.globals["attribute"] = getattr
 
 @router.get("/", response_class=HTMLResponse, name="dashboard:index")
-async def dashboard(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user_profile),
-):
+async def dashboard(...):
+    # احصل على stats, recent_activities, permissions كما قبل
+    context = {
+        "request": request,
+        "current_user": current_user,
+        "stats": stats,
+        "recent_activities": recent_activities,
+        "permissions": permissions,
+    }
+    return templates.TemplateResponse("dashboard/index.html", sanitize_context(context))
     """Main dashboard page with dynamic data."""
     from app.modules.dashboard.services import DashboardService
     
