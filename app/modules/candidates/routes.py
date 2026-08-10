@@ -36,7 +36,8 @@ async def candidate_list(
     skip = (page - 1) * per_page
     candidates = service.get_all_candidates(company_id=current_user.company_id, skip=skip, limit=per_page)
 
-    fields = get_model_fields_sqlalchemy(Candidate)
+    # get_model_fields_sqlalchemy returns list[dict], convert to list[str] names for templates
+    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
 
     context = {
         "request": request,
@@ -73,7 +74,8 @@ async def candidate_view(
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
-    fields = get_model_fields_sqlalchemy(Candidate)
+    # convert fields to simple names for templates
+    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
 
     context = {
         "request": request,
@@ -95,7 +97,8 @@ async def candidate_create_form(
     current_user=Depends(require_permission(Permission.MANAGE_CANDIDATES)),
 ):
     """Render candidate creation form."""
-    fields = get_model_fields_sqlalchemy(Candidate)
+    # convert fields to simple names for templates
+    fields = [col["name"] for col in get_model_fields_sqlalchemy(Candidate)]
 
     context = {
         "request": request,
