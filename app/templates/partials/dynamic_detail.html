@@ -3,16 +3,30 @@
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
     <div class="flex items-center gap-4 mb-6">
       <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold">
-        {{ (attribute(item, 'first_name') | default(''))[:1] }}{{ (attribute(item, 'last_name') | default(''))[:1] }}
+        {{ (item['first_name']|default(''))[:1] }}{{ (item['last_name']|default(''))[:1] }}
       </div>
       <div>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ attribute(item, title_attr) | default((attribute(item, 'first_name') | default('')) ~ ' ' ~ (attribute(item, 'last_name') | default(''))) }}</h2>
-        <p class="text-gray-500 dark:text-gray-400 capitalize">{{ (attribute(item, 'role') | default('')) | replace('_',' ') }}</p>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ item[title_attr]|default((item['first_name']|default('')) ~ ' ' ~ (item['last_name']|default(''))) }}</h2>
+        <p class="text-gray-500 dark:text-gray-400 capitalize">{{ (item['role']|default('')) | replace('_',' ') }}</p>
       </div>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
       {% for f in fields %}
-        <div><span class="text-gray-500">{{ f.name.replace('_',' ')|capitalize }}:</span> <span class="font-medium text-gray-900 dark:text-white ml-2">{% set val = attribute(item, f.name) %}{{ val if val is not none else '—' }}</span></div>
+        <div>
+          <span class="text-gray-500">{{ f.name.replace('_',' ')|capitalize }}:</span>
+          <span class="font-medium text-gray-900 dark:text-white ml-2">
+            {% set val = item[f.name]|default(None) %}
+            {% if val is none %}
+              <span class="text-gray-400 dark:text-gray-500">—</span>
+            {% elif f.type and f.type.lower().find('bool') >= 0 %}
+              {{ 'Yes' if val else 'No' }}
+            {% elif f.foreign_keys %}
+              {{ val['full_name']|default(val['name']|default(val)) }}
+            {% else %}
+              {{ val }}
+            {% endif %}
+          </span>
+        </div>
       {% endfor %}
     </div>
   </div>
