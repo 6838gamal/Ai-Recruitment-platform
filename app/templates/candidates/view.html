@@ -17,8 +17,8 @@
       </div>
 
       <div class="ml-auto flex items-center gap-2">
-        <a href="{{ request.url_for('candidates:edit_form', candidate_id=str(candidate.id)) }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md">Edit</a>
-        <form method="post" action="{{ request.url_for('candidates:delete', candidate_id=str(candidate.id)) }}" onsubmit="return confirm('Are you sure you want to delete this candidate?');">
+        <a href="{{ request.url_for('candidates:edit_form', candidate_id=candidate.id|string) }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md">Edit</a>
+        <form method="post" action="{{ request.url_for('candidates:delete', candidate_id=candidate.id|string) }}" onsubmit="return confirm('Are you sure you want to delete this candidate?');">
           <button type="submit" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md">Delete</button>
         </form>
       </div>
