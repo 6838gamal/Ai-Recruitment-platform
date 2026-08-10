@@ -28,9 +28,9 @@ async def company_list(
     companies = service.list_companies()
     fields = get_model_fields_sqlalchemy(Company)
     return templates.TemplateResponse(
-        request, 
-        "companies/list.html", 
+        "companies/list.html",
         {
+            "request": request,
             "companies": companies,
             "fields": fields,
             "current_user": current_user,
@@ -47,9 +47,9 @@ async def company_create_get(
     """Render create company form."""
     fields = get_model_fields_sqlalchemy(Company)
     return templates.TemplateResponse(
-        request, 
-        "companies/form.html", 
+        "companies/form.html",
         {
+            "request": request,
             "fields": fields, 
             "action": "create", 
             "current_user": current_user, 
@@ -76,9 +76,9 @@ async def company_create_post(
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
         return templates.TemplateResponse(
-            request, 
-            "companies/form.html", 
+            "companies/form.html",
             {
+                "request": request,
                 "fields": fields, 
                 "action": "create", 
                 "current_user": current_user, 
@@ -112,9 +112,9 @@ async def company_detail(
     
     fields = get_model_fields_sqlalchemy(Company)
     return templates.TemplateResponse(
-        request, 
-        "companies/detail.html", 
+        "companies/detail.html",
         {
+            "request": request,
             "company": company, 
             "fields": fields, 
             "current_user": current_user
@@ -145,9 +145,9 @@ async def company_edit_get(
     
     fields = get_model_fields_sqlalchemy(Company)
     return templates.TemplateResponse(
-        request, 
-        "companies/form.html", 
+        "companies/form.html",
         {
+            "request": request,
             "company": company, 
             "fields": fields, 
             "action": "edit", 
@@ -187,9 +187,9 @@ async def company_edit_post(
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
         return templates.TemplateResponse(
-            request, 
-            "companies/form.html", 
+            "companies/form.html",
             {
+                "request": request,
                 "company": company, 
                 "fields": fields, 
                 "action": "edit", 
