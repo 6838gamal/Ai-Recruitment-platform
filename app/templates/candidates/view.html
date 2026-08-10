@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ candidate.full_name }}</h1>
+
+  <dl>
+    <dt>Email</dt><dd>{{ candidate.email }}</dd>
+    <dt>Phone</dt><dd>{{ candidate.phone or '-' }}</dd>
+    <dt>Location</dt><dd>{{ candidate.location or '-' }}</dd>
+    <dt>Summary</dt><dd>{{ candidate.summary or '-' }}</dd>
+  </dl>
+
+  <p>
+    <a href="{{ request.url_for('candidates:list') }}">Back to list</a>
+  </p>
+{% endblock %}
