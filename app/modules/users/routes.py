@@ -44,7 +44,7 @@ async def user_list(
             "page": page,
             "current_user": current_user,
             "fields": fields,
-        }
+        },
     )
 
 
@@ -63,5 +63,5 @@ async def my_profile(
             "profile": current_user,
             "current_user": current_user,
             "fields": fields,
-        }
+        },
     )
