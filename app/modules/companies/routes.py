@@ -5,9 +5,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 import uuid
-import logging
-
-from jinja2 import TemplateError
 
 from app.core.permissions import Permission
 from app.database import get_db
@@ -19,26 +16,26 @@ from app.modules.companies.models import Company
 router = APIRouter(prefix="/companies", tags=["Companies"]) 
 templates = Jinja2Templates(directory="app/templates")
 
+# Ensure `attribute` helper is available in Jinja globals so templates can call attribute(obj, name)
+if "attribute" not in templates.env.globals:
+    templates.env.globals["attribute"] = getattr
 
-def render_template(name: str, context: dict, status_code: Optional[int] = None):
-    """Safe template renderer that prefers TemplateResponse but falls back to manual render on TypeError.
-
-    Uses positional args for TemplateResponse to be compatible across starlette/jinja2 versions.
+def render_template(request: Request, name: str, context: dict | None = None):
     """
-    try:
-        if status_code is not None:
-            return templates.TemplateResponse(name, context, status_code=status_code)
-        return templates.TemplateResponse(name, context)
-    except TypeError as exc:
-        logging.exception("TemplateResponse TypeError for %s: %s", name, exc)
+    Safe helper to render templates: ensures context is a plain dict and always includes the request.
+    Use this instead of calling templates.TemplateResponse(...) directly from routes.
+    """
+    if context is None:
+        context = {}
+    # Defensive: convert non-dict contexts (e.g., sequence of pairs) into dict
+    if not isinstance(context, dict):
         try:
-            template = templates.env.get_template(name)
-            rendered = template.render(**context)
-            return HTMLResponse(rendered, status_code=status_code) if status_code is not None else HTMLResponse(rendered)
-        except TemplateError:
-            # Re-raise to surface the underlying problem if fallback fails
-            raise
-
+            context = dict(context)
+        except Exception:
+            context = {}
+    ctx = {"request": request, **context}
+    # Use the newer TemplateResponse signature (request first)
+    return templates.TemplateResponse(request, name, ctx)
 
 @router.get("/", response_class=HTMLResponse, name="companies:list")
 async def company_list(
@@ -51,15 +48,14 @@ async def company_list(
     companies = service.list_companies()
     fields = get_model_fields_sqlalchemy(Company)
     return render_template(
-        name="companies/list.html",
-        context={
-            "request": request,
+        request,
+        "companies/list.html",
+        {
             "companies": companies,
             "fields": fields,
             "current_user": current_user,
         },
     )
-
 
 @router.get("/create", response_class=HTMLResponse, name="companies:create")
 async def company_create_get(
@@ -70,35 +66,27 @@ async def company_create_get(
     """Render create company form."""
     fields = get_model_fields_sqlalchemy(Company)
     return render_template(
-        name="companies/form.html",
-        context={
-            "request": request,
+        request,
+        "companies/form.html",
+        {
             "fields": fields, 
             "action": "create", 
             "current_user": current_user, 
-            "error": None
+            "error": None,
         },
     )
 
-
 @router.post("/create")
 async def company_create_post(
-    request: Request,
+    request: Request, 
+    name: str = Form(...), 
+    slug: str = Form(...), 
     db: Session = Depends(get_db), 
     current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
 ):
-    """Create new company (dynamic form handling)."""
+    """Create new company."""
     service = CompanyService(db)
-
-    form = await request.form()
-    data = {}
-    for k, v in form.items():
-        # checkbox values set to '1' in template -> True
-        if v == "1":
-            data[k] = True
-        else:
-            data[k] = v.strip() if isinstance(v, str) else v
-
+    data = {"name": name.strip(), "slug": slug.strip()}
     try:
         company = service.create_company(data)
         db.commit()
@@ -106,19 +94,16 @@ async def company_create_post(
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
         return render_template(
-            name="companies/form.html",
-            context={
-                "request": request,
+            request,
+            "companies/form.html",
+            {
                 "fields": fields, 
                 "action": "create", 
                 "current_user": current_user, 
                 "error": "Slug already exists or invalid data",
-                "form_values": data,
             },
-            status_code=400,
         )
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
-
 
 @router.get("/{identifier}", response_class=HTMLResponse, name="companies:detail")
 async def company_detail(
@@ -143,15 +128,14 @@ async def company_detail(
     
     fields = get_model_fields_sqlalchemy(Company)
     return render_template(
-        name="companies/detail.html",
-        context={
-            "request": request,
+        request,
+        "companies/detail.html",
+        {
             "company": company, 
             "fields": fields, 
-            "current_user": current_user
+            "current_user": current_user,
         },
     )
-
 
 @router.get("/{identifier}/edit", response_class=HTMLResponse, name="companies:edit")
 async def company_edit_get(
@@ -176,26 +160,27 @@ async def company_edit_get(
     
     fields = get_model_fields_sqlalchemy(Company)
     return render_template(
-        name="companies/form.html",
-        context={
-            "request": request,
+        request,
+        "companies/form.html",
+        {
             "company": company, 
             "fields": fields, 
             "action": "edit", 
             "current_user": current_user, 
-            "error": None
+            "error": None,
         },
     )
-
 
 @router.post("/{identifier}/edit")
 async def company_edit_post(
     request: Request, 
     identifier: str, 
+    name: str = Form(...), 
+    slug: str = Form(...), 
     db: Session = Depends(get_db), 
     current_user=Depends(require_permission(Permission.MANAGE_COMPANIES))
 ):
-    """Update company (dynamic form handling)."""
+    """Update company."""
     service = CompanyService(db)
     company = service.get_by_slug(identifier)
     if not company:
@@ -207,15 +192,8 @@ async def company_edit_post(
     
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-
-    form = await request.form()
-    data = {}
-    for k, v in form.items():
-        if v == "1":
-            data[k] = True
-        else:
-            data[k] = v.strip() if isinstance(v, str) else v
-
+    
+    data = {"name": name.strip(), "slug": slug.strip()}
     try:
         updated = service.update_company(company, data)
         db.commit()
@@ -223,20 +201,17 @@ async def company_edit_post(
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
         return render_template(
-            name="companies/form.html",
-            context={
-                "request": request,
+            request,
+            "companies/form.html",
+            {
                 "company": company, 
                 "fields": fields, 
                 "action": "edit", 
                 "current_user": current_user, 
                 "error": "Slug already exists or invalid data",
-                "form_values": data,
             },
-            status_code=400,
         )
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)
-
 
 @router.post("/{identifier}/delete")
 async def company_delete(
