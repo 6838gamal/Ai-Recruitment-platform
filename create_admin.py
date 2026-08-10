@@ -13,6 +13,7 @@ from app.modules.companies.models import Company
 from app.modules.users.models import UserProfile
 from app.core.permissions import UserRole
 
+
 # ── Default credentials (change after first login) ───────────────────────────
 ADMIN_EMAIL = "admin@admin.com"
 ADMIN_PASSWORD = "Admin@1234"
@@ -20,6 +21,21 @@ ADMIN_PASSWORD = "Admin@1234"
 # ── Default company ─────────────────────────────────────────────────────────
 DEFAULT_COMPANY_NAME = "Default Company"
 DEFAULT_COMPANY_SLUG = "default-company"
+
+
+def _safe_rollback(db):
+    """Attempt to rollback the DB session, ignoring errors.
+
+    Many SQLAlchemy errors leave the transaction in an aborted state and
+    subsequent queries will fail until a rollback is performed. Call this
+    helper from any exception handler that wants to continue using the
+    session.
+    """
+    try:
+        db.rollback()
+    except Exception:
+        # Best-effort only; don't raise from the rollback attempt
+        pass
 
 
 def _get_or_create_company(db) -> Company:
@@ -33,6 +49,8 @@ def _get_or_create_company(db) -> Company:
             print(f"  ⚠️  Could not query companies table (migrations may be incomplete)")
             print(f"     This is OK - we'll skip company creation for now.")
             print(f"     Error: {str(query_error)[:100]}...")
+            # rollback the session so subsequent queries can proceed
+            _safe_rollback(db)
             return None  # Return None if we can't query the table
 
         if company:
@@ -51,8 +69,10 @@ def _get_or_create_company(db) -> Company:
         print(f"✓ Default company created: {company.name} (id={company.id})")
         return company
     except Exception as e:
-        print(f"⚠��  Error creating company: {str(e)[:200]}...")
+        print(f"⚠️  Error creating company: {str(e)[:200]}...")
         print(f"   This might be due to incomplete migrations. Continuing anyway...")
+        # ensure any partial transaction is cleared
+        _safe_rollback(db)
         return None
 
 
@@ -81,6 +101,7 @@ def main():
         except Exception as e:
             print(f"⚠️  Error querying user by email: {str(e)[:200]}...")
             traceback.print_exc()
+            _safe_rollback(db)
             raise
 
         if user:
@@ -97,6 +118,7 @@ def main():
             except Exception as e:
                 print(f"⚠️  Error creating user: {str(e)[:200]}...")
                 traceback.print_exc()
+                _safe_rollback(db)
                 raise
 
         # ── 3. Ensure admin has a UserProfile linked to the company ───────────────────
@@ -109,6 +131,7 @@ def main():
             except Exception as e:
                 print(f"⚠️  Error querying UserProfile: {str(e)[:200]}...")
                 traceback.print_exc()
+                _safe_rollback(db)
                 raise
 
             if profile:
@@ -134,6 +157,7 @@ def main():
                 except Exception as e:
                     print(f"⚠️  Error creating UserProfile: {str(e)[:200]}...")
                     traceback.print_exc()
+                    _safe_rollback(db)
                     raise
         else:
             print("\n📋 Step 3: Skipping UserProfile creation (company not available)")
