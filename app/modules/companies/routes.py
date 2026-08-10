@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional
 import uuid
+import logging
+
+from jinja2 import TemplateError
 
 from app.core.permissions import Permission
 from app.database import get_db
@@ -17,6 +20,27 @@ router = APIRouter(prefix="/companies", tags=["Companies"])
 templates = Jinja2Templates(directory="app/templates")
 
 
+def render_template(name: str, context: dict, status_code: Optional[int] = None):
+    """Safe template renderer that prefers TemplateResponse but falls back to manual render on TypeError.
+
+    This avoids Jinja2 cache-key TypeError issues by ensuring the correct TemplateResponse
+    signature is used and providing a fallback render path.
+    """
+    try:
+        if status_code is not None:
+            return templates.TemplateResponse(name=name, context=context, status_code=status_code)
+        return templates.TemplateResponse(name=name, context=context)
+    except TypeError as exc:
+        logging.exception("TemplateResponse TypeError for %s: %s", name, exc)
+        try:
+            template = templates.env.get_template(name)
+            rendered = template.render(**context)
+            return HTMLResponse(rendered, status_code=status_code) if status_code is not None else HTMLResponse(rendered)
+        except TemplateError:
+            # Re-raise to surface the underlying problem if fallback fails
+            raise
+
+
 @router.get("/", response_class=HTMLResponse, name="companies:list")
 async def company_list(
     request: Request,
@@ -27,14 +51,14 @@ async def company_list(
     service = CompanyService(db)
     companies = service.list_companies()
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(
-        "companies/list.html",
-        {
+    return render_template(
+        name="companies/list.html",
+        context={
             "request": request,
             "companies": companies,
             "fields": fields,
             "current_user": current_user,
-        }
+        },
     )
 
 
@@ -46,15 +70,15 @@ async def company_create_get(
 ):
     """Render create company form."""
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(
-        "companies/form.html",
-        {
+    return render_template(
+        name="companies/form.html",
+        context={
             "request": request,
             "fields": fields, 
             "action": "create", 
             "current_user": current_user, 
             "error": None
-        }
+        },
     )
 
 
@@ -75,16 +99,16 @@ async def company_create_post(
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(
-            "companies/form.html",
-            {
+        return render_template(
+            name="companies/form.html",
+            context={
                 "request": request,
                 "fields": fields, 
                 "action": "create", 
                 "current_user": current_user, 
                 "error": "Slug already exists or invalid data"
             },
-            status_code=400
+            status_code=400,
         )
     return RedirectResponse(url=f"/companies/{company.slug}", status_code=303)
 
@@ -111,14 +135,14 @@ async def company_detail(
         raise HTTPException(status_code=404, detail="Company not found")
     
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(
-        "companies/detail.html",
-        {
+    return render_template(
+        name="companies/detail.html",
+        context={
             "request": request,
             "company": company, 
             "fields": fields, 
             "current_user": current_user
-        }
+        },
     )
 
 
@@ -144,16 +168,16 @@ async def company_edit_get(
         raise HTTPException(status_code=404, detail="Company not found")
     
     fields = get_model_fields_sqlalchemy(Company)
-    return templates.TemplateResponse(
-        "companies/form.html",
-        {
+    return render_template(
+        name="companies/form.html",
+        context={
             "request": request,
             "company": company, 
             "fields": fields, 
             "action": "edit", 
             "current_user": current_user, 
             "error": None
-        }
+        },
     )
 
 
@@ -186,9 +210,9 @@ async def company_edit_post(
     except IntegrityError:
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
-        return templates.TemplateResponse(
-            "companies/form.html",
-            {
+        return render_template(
+            name="companies/form.html",
+            context={
                 "request": request,
                 "company": company, 
                 "fields": fields, 
@@ -196,7 +220,7 @@ async def company_edit_post(
                 "current_user": current_user, 
                 "error": "Slug already exists or invalid data"
             },
-            status_code=400
+            status_code=400,
         )
     return RedirectResponse(url=f"/companies/{updated.slug}", status_code=303)
 
