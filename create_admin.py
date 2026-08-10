@@ -25,11 +25,13 @@ DEFAULT_COMPANY_SLUG = "default-company"
 def _get_or_create_company(db) -> Company:
     """Return the default company, creating it if needed."""
     try:
+        print("\n📍 Attempting to query existing company...")
         company = db.query(Company).filter_by(slug=DEFAULT_COMPANY_SLUG).first()
         if company:
             print(f"✓ Default company already exists: {company.name}")
             return company
 
+        print(f"  Creating new company: {DEFAULT_COMPANY_NAME}")
         company = Company(
             name=DEFAULT_COMPANY_NAME,
             slug=DEFAULT_COMPANY_SLUG,
@@ -38,7 +40,7 @@ def _get_or_create_company(db) -> Company:
         )
         db.add(company)
         db.flush()  # get company.id without committing
-        print(f"✓ Default company created: {company.name}")
+        print(f"✓ Default company created: {company.name} (id={company.id})")
         return company
     except Exception as e:
         print(f"❌ Error creating company: {str(e)}")
@@ -50,36 +52,45 @@ def main():
     db = SessionLocal()
 
     try:
+        print("\n🔄 Starting admin initialization...")
         repo = UserRepository(db)
 
         # ── 1. Ensure default company exists ─────────────────────────────────
+        print("\n📍 Step 1: Ensuring default company exists...")
         company = _get_or_create_company(db)
 
         # ── 2. Ensure admin user exists ───────────────────────────────────────
+        print("\n📍 Step 2: Checking for admin user...")
         try:
             user = repo.get_by_email(ADMIN_EMAIL)
+            print(f"  Query successful. User found: {user is not None}")
         except Exception as e:
-            print(f"❌ Error querying user: {str(e)}")
+            print(f"❌ Error querying user by email: {str(e)}")
             traceback.print_exc()
             raise
 
         if user:
             print(f"✓ Admin user already exists: {user.email}")
         else:
+            print(f"  Creating new admin user: {ADMIN_EMAIL}")
             try:
                 user = repo.create_user(email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+                print(f"  User created with id={user.id}")
                 user.is_active = True
                 user.is_verified = True
                 db.flush()
-                print(f"✓ Admin user created: {user.email}")
+                print(f"✓ Admin user created and activated: {user.email}")
             except Exception as e:
                 print(f"❌ Error creating user: {str(e)}")
                 traceback.print_exc()
                 raise
 
         # ── 3. Ensure admin has a UserProfile linked to the company ───────────
+        print("\n📍 Step 3: Creating admin profile...")
         try:
+            print(f"  Querying UserProfile for user_id={user.id}...")
             profile = db.query(UserProfile).filter_by(user_id=user.id).first()
+            print(f"  Query successful. Profile found: {profile is not None}")
         except Exception as e:
             print(f"❌ Error querying UserProfile: {str(e)}")
             traceback.print_exc()
@@ -88,22 +99,31 @@ def main():
         if profile:
             print(f"✓ Admin profile already exists: {profile.full_name}")
         else:
+            print(f"  Creating UserProfile...")
+            print(f"    - user_id: {user.id}")
+            print(f"    - company_id: {company.id}")
+            print(f"    - role: {UserRole.SUPER_ADMIN.value}")
             try:
                 profile = UserProfile(
                     user_id=user.id,
                     company_id=company.id,
-                    role=UserRole.SUPER_ADMIN.value,
+                    role=UserRole.SUPER_ADMIN.value,  # Use string value
                     first_name="Super",
                     last_name="Admin",
                 )
+                print(f"  UserProfile object created")
                 db.add(profile)
-                print("✓ Admin profile created (Super Admin)")
+                print(f"  Added to session, flushing...")
+                db.flush()
+                print(f"✓ Admin profile created (Super Admin) with id={profile.id}")
             except Exception as e:
                 print(f"❌ Error creating UserProfile: {str(e)}")
                 traceback.print_exc()
                 raise
 
+        print(f"\n📍 Step 4: Committing transaction...")
         db.commit()
+        print(f"✓ Transaction committed successfully")
 
         print("")
         print("─" * 40)
@@ -112,15 +132,19 @@ def main():
         print(f"  Password: {ADMIN_PASSWORD}")
         print("─" * 40)
         print("✅ Admin user initialization completed successfully!")
+        print("")
 
     except Exception as e:
-        db.rollback()
-        print(f"\n❌ Admin user initialization failed: {str(e)}")
+        print(f"\n❌ Admin user initialization failed!")
+        print(f"Error: {str(e)}")
+        print(f"\nFull traceback:")
         traceback.print_exc()
+        db.rollback()
         sys.exit(1)
 
     finally:
         db.close()
+        print("Database session closed.")
 
 
 if __name__ == "__main__":
