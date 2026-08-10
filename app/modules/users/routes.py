@@ -65,6 +65,132 @@ async def user_list(
 
 
 @router.get(
+    "/{user_id}",
+    response_class=HTMLResponse,
+    name="users:view",
+)
+async def user_view(
+    request: Request,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(
+        require_permission(Permission.VIEW_USERS)
+    ),
+):
+    """User detail view page."""
+
+    from app.modules.users.services import UserService
+
+    service = UserService(db)
+
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid user ID")
+
+    user = db.query(UserProfile).filter(
+        UserProfile.id == user_uuid,
+        UserProfile.company_id == current_user.company_id,
+        UserProfile.deleted_at.is_(None),
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    fields = get_model_fields_sqlalchemy(UserProfile)
+
+    context = {
+        "request": request,
+        "user": user,
+        "current_user": current_user,
+        "fields": fields,
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="users/view.html",
+        context=sanitize_context(context),
+    )
+
+
+@router.get(
+    "/{user_id}/edit",
+    response_class=HTMLResponse,
+    name="users:edit",
+)
+async def user_edit(
+    request: Request,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(
+        require_permission(Permission.EDIT_USERS)
+    ),
+):
+    """User edit page."""
+
+    from app.modules.users.services import UserService
+
+    service = UserService(db)
+
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid user ID")
+
+    user = db.query(UserProfile).filter(
+        UserProfile.id == user_uuid,
+        UserProfile.company_id == current_user.company_id,
+        UserProfile.deleted_at.is_(None),
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    fields = get_model_fields_sqlalchemy(UserProfile)
+
+    context = {
+        "request": request,
+        "user": user,
+        "current_user": current_user,
+        "fields": fields,
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="users/edit.html",
+        context=sanitize_context(context),
+    )
+
+
+@router.get(
+    "/invite",
+    response_class=HTMLResponse,
+    name="users:invite",
+)
+async def invite_user(
+    request: Request,
+    current_user=Depends(
+        require_permission(Permission.INVITE_USERS)
+    ),
+):
+    """Invite user page."""
+
+    fields = get_model_fields_sqlalchemy(UserProfile)
+
+    context = {
+        "request": request,
+        "current_user": current_user,
+        "fields": fields,
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="users/invite.html",
+        context=sanitize_context(context),
+    )
+
+
+@router.get(
     "/profile",
     response_class=HTMLResponse,
     name="users:profile",
