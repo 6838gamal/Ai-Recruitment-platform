@@ -3,35 +3,66 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from decimal import Decimal
 import uuid
+from typing import List, Optional, Tuple
 
 from app.core.base.service import BaseService
+from app.core.exceptions import NotFoundError, PermissionDeniedError
 from app.modules.jobs.models import JobPosting
+from app.modules.jobs.repositories import JobPostingRepository
+from app.modules.jobs.schemas import JobPostingCreate, JobPostingUpdate
 
 
 class JobService(BaseService):
+    """Job management service."""
+
     def __init__(self, db: Session):
         super().__init__(db)
+        self.repo = JobPostingRepository(db)
 
-    def get_all_jobs(self, company_id, skip: int = 0, limit: int = 25):
-        """Get all jobs for a company with pagination."""
-        stmt = select(JobPosting).where(
-            JobPosting.company_id == company_id,
-            JobPosting.deleted_at.is_(None)
-        ).offset(skip).limit(limit)
-        
-        jobs = self.db.execute(stmt).scalars().all()
-        return jobs
-
-    def get_job_by_id(self, job_id, company_id):
-        """Get a single job by ID."""
-        stmt = select(JobPosting).where(
-            JobPosting.id == job_id,
-            JobPosting.company_id == company_id,
-            JobPosting.deleted_at.is_(None)
+    def list_jobs(
+        self,
+        company_id: uuid.UUID,
+        status: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 25,
+    ) -> Tuple[List[JobPosting], int]:
+        """List jobs for a company with pagination."""
+        skip = (page - 1) * per_page
+        jobs = self.repo.get_by_company(
+            company_id=company_id,
+            status=status,
+            skip=skip,
+            limit=per_page,
         )
-        return self.db.execute(stmt).scalar_one_or_none()
+        total = self.repo.count_by_company(company_id, status=status)
+        return jobs, total
 
-    def create_job(self, current_user, data: dict) -> JobPosting:
+    def get_all_jobs(
+        self,
+        company_id: uuid.UUID,
+        skip: int = 0,
+        limit: int = 25,
+    ) -> List[JobPosting]:
+        """Get all jobs for a company with pagination."""
+        return self.repo.get_by_company(
+            company_id=company_id,
+            skip=skip,
+            limit=limit,
+        )
+
+    def get_job_by_id(
+        self,
+        job_id: uuid.UUID,
+        company_id: uuid.UUID,
+    ) -> Optional[JobPosting]:
+        """Get a single job by ID (company-scoped)."""
+        return self.repo.get_by_id(job_id, company_id)
+
+    def create_job(
+        self,
+        current_user,
+        data: dict,
+    ) -> JobPosting:
         """Create a JobPosting from form/API data.
 
         Expects either current_user.company_id or data['company_id'] to be present.
@@ -41,6 +72,8 @@ class JobService(BaseService):
             raise ValueError("company_id is required to create a job")
 
         created_by = getattr(current_user, "id", None)
+        if not created_by:
+            raise PermissionDeniedError("Current user must have an ID")
 
         # Convert salary fields to Decimal when present
         salary_min = data.get("salary_min")
@@ -69,6 +102,40 @@ class JobService(BaseService):
         )
 
         self.db.add(job)
-        # Flush so the job gets an id populated before commit
         self.db.flush()
         return job
+
+    def update_job(
+        self,
+        job_id: uuid.UUID,
+        company_id: uuid.UUID,
+        data: dict,
+    ) -> JobPosting:
+        """Update an existing job posting."""
+        job = self.repo.get_by_id(job_id, company_id)
+        if not job:
+            raise NotFoundError("JobPosting", job_id)
+
+        # Convert salary fields to Decimal when present
+        if "salary_min" in data and data["salary_min"] is not None:
+            data["salary_min"] = Decimal(str(data["salary_min"])) if data["salary_min"] != "" else None
+        if "salary_max" in data and data["salary_max"] is not None:
+            data["salary_max"] = Decimal(str(data["salary_max"])) if data["salary_max"] != "" else None
+
+        updated = self.repo.update(job, data)
+        self.db.commit()
+        return updated
+
+    def delete_job(
+        self,
+        job_id: uuid.UUID,
+        company_id: uuid.UUID,
+    ) -> JobPosting:
+        """Soft-delete a job posting."""
+        job = self.repo.get_by_id(job_id, company_id)
+        if not job:
+            raise NotFoundError("JobPosting", job_id)
+
+        deleted = self.repo.soft_delete(job)
+        self.db.commit()
+        return deleted
