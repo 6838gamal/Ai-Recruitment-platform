@@ -59,85 +59,7 @@ async def job_list(
     )
 
 
-@router.get(
-    "/{job_id}",
-    response_class=HTMLResponse,
-    name="jobs:view",
-)
-async def job_view(
-    request: Request,
-    job_id: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission(Permission.VIEW_JOBS)),
-):
-    """Job detail view page."""
-    service = JobService(db)
-
-    try:
-        job_uuid = uuid.UUID(job_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid job ID")
-
-    job = service.get_job_by_id(job_uuid, current_user.company_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    fields = get_model_fields_sqlalchemy(JobPosting)
-
-    context = {
-        "request": request,
-        "job": job,
-        "current_user": current_user,
-        "fields": fields,
-    }
-
-    return templates.TemplateResponse(
-        request=request,
-        name="jobs/view.html",
-        context=sanitize_context(context),
-    )
-
-
-@router.get(
-    "/{job_id}/edit",
-    response_class=HTMLResponse,
-    name="jobs:edit",
-)
-async def job_edit(
-    request: Request,
-    job_id: str,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission(Permission.MANAGE_JOBS)),
-):
-    """Job edit page."""
-    service = JobService(db)
-
-    try:
-        job_uuid = uuid.UUID(job_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Invalid job ID")
-
-    job = service.get_job_by_id(job_uuid, current_user.company_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    fields = get_model_fields_sqlalchemy(JobPosting)
-
-    context = {
-        "request": request,
-        "job": job,
-        "current_user": current_user,
-        "fields": fields,
-        "action": "edit",
-    }
-
-    return templates.TemplateResponse(
-        request=request,
-        name="jobs/form.html",
-        context=sanitize_context(context),
-    )
-
-
+# --- Create routes BEFORE dynamic routes to avoid matching "create" as a dynamic job_id ---
 @router.get(
     "/create",
     response_class=HTMLResponse,
@@ -230,6 +152,86 @@ async def job_create_post(
         )
 
     return RedirectResponse(url=f"/jobs/{job.id}", status_code=303)
+
+
+# --- Dynamic routes (must come AFTER static routes like /create) ---
+@router.get(
+    "/{job_id}",
+    response_class=HTMLResponse,
+    name="jobs:view",
+)
+async def job_view(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.VIEW_JOBS)),
+):
+    """Job detail view page."""
+    service = JobService(db)
+
+    try:
+        job_uuid = uuid.UUID(job_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid job ID")
+
+    job = service.get_job_by_id(job_uuid, current_user.company_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    fields = get_model_fields_sqlalchemy(JobPosting)
+
+    context = {
+        "request": request,
+        "job": job,
+        "current_user": current_user,
+        "fields": fields,
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="jobs/view.html",
+        context=sanitize_context(context),
+    )
+
+
+@router.get(
+    "/{job_id}/edit",
+    response_class=HTMLResponse,
+    name="jobs:edit",
+)
+async def job_edit(
+    request: Request,
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission(Permission.MANAGE_JOBS)),
+):
+    """Job edit page."""
+    service = JobService(db)
+
+    try:
+        job_uuid = uuid.UUID(job_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Invalid job ID")
+
+    job = service.get_job_by_id(job_uuid, current_user.company_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    fields = get_model_fields_sqlalchemy(JobPosting)
+
+    context = {
+        "request": request,
+        "job": job,
+        "current_user": current_user,
+        "fields": fields,
+        "action": "edit",
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="jobs/form.html",
+        context=sanitize_context(context),
+    )
 
 
 @router.post(
