@@ -93,6 +93,15 @@ templates = Jinja2Templates(
     directory="app/templates"
 )
 
+# Workaround: avoid using template globals in Jinja cache key which can be unhashable
+env = getattr(templates, "env", None) or getattr(templates, "environment", None)
+if env is not None:
+    # Keep the env but force get_template to ignore any passed globals when caching
+    _env = env
+    def _safe_get_template(name, globals=None):
+        return _env.get_template(name)
+    templates.get_template = _safe_get_template
+
 
 @app.exception_handler(AppException)
 async def app_exception_handler(
@@ -200,9 +209,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             )
         
         return templates.TemplateResponse(
-            request,
             "errors/403.html",
-            {"error": exc.detail},
+            {"request": request, "error": exc.detail},
             status_code=403,
         )
     
@@ -221,9 +229,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             )
         
         return templates.TemplateResponse(
-            request,
             "errors/404.html",
-            {},
+            {"request": request},
             status_code=404,
         )
     
