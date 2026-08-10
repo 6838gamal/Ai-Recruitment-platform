@@ -48,6 +48,8 @@ class Permission(str, Enum):
     # User permissions
     MANAGE_USERS = "manage_users"
     VIEW_USERS = "view_users"
+    EDIT_USERS = "edit_users"
+    INVITE_USERS = "invite_users"
     VIEW_ACCOUNTS = "view_accounts"  # added to support accounts routes
 
     # Job permissions
@@ -89,6 +91,8 @@ ROLE_PERMISSIONS: dict[UserRole, List[Permission]] = {
         Permission.VIEW_COMPANIES,
         Permission.MANAGE_USERS,
         Permission.VIEW_USERS,
+        Permission.EDIT_USERS,
+        Permission.INVITE_USERS,
         Permission.VIEW_ACCOUNTS,
         Permission.MANAGE_JOBS,
         Permission.VIEW_JOBS,
@@ -108,6 +112,8 @@ ROLE_PERMISSIONS: dict[UserRole, List[Permission]] = {
     UserRole.HR: [
         Permission.MANAGE_USERS,
         Permission.VIEW_USERS,
+        Permission.EDIT_USERS,
+        Permission.INVITE_USERS,
         Permission.VIEW_ACCOUNTS,
         Permission.MANAGE_JOBS,
         Permission.VIEW_JOBS,

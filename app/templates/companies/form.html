@@ -9,14 +9,27 @@
     {% endif %}
     <form method="post" action="{% if action == 'edit' %}/companies/{{ company.slug }}/edit{% else %}/companies/create{% endif %}">
       <div class="grid grid-cols-1 gap-4">
-        <div>
-          <label class="text-sm text-gray-500">Name</label>
-          <input type="text" name="name" value="{{ company.name if company else '' }}" class="w-full mt-1 p-2 border rounded-lg" required />
-        </div>
-        <div>
-          <label class="text-sm text-gray-500">Slug</label>
-          <input type="text" name="slug" value="{{ company.slug if company else '' }}" class="w-full mt-1 p-2 border rounded-lg" required />
-        </div>
+        {% for f in fields %}
+          {# Render field only if it's not a primary/system field. Avoid using 'continue' which isn't supported in some Jinja versions #}
+          {% if not (f.primary_key or f.name in ['id','created_at','updated_at','deleted_at']) %}
+
+          <div>
+            <label class="text-sm text-gray-500">{{ f.name.replace('_',' ')|capitalize }}</label>
+
+            {% set value = (form_values[f.name] if form_values is defined and f.name in form_values else (company and attribute(company, f.name))) %}
+            {% if 'bool' in (f.type|default(''))|lower %}
+              <div class="mt-1">
+                <input type="checkbox" name="{{ f.name }}" value="1" {% if value %}checked{% endif %} />
+              </div>
+            {% elif 'text' in (f.type|default(''))|lower or 'clob' in (f.type|default(''))|lower %}
+              <textarea name="{{ f.name }}" class="w-full mt-1 p-2 border rounded-lg">{{ value|default('') }}</textarea>
+            {% else %}
+              <input type="text" name="{{ f.name }}" value="{{ value|default('') }}" class="w-full mt-1 p-2 border rounded-lg" {% if f.name in ['name','slug'] %}required{% endif %} />
+            {% endif %}
+          </div>
+
+          {% endif %}
+        {% endfor %}
       </div>
       <div class="mt-4">
         <button class="px-4 py-2 bg-primary-600 text-white rounded-lg">{% if action == 'edit' %}Save{% else %}Create{% endif %}</button>

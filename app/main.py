@@ -93,6 +93,69 @@ templates = Jinja2Templates(
     directory="app/templates"
 )
 
+# Robust workaround: wrap the Jinja2 environment's get_template so that any
+# globals passed by Starlette/TemplateResponse are sanitized to contain only
+# hashable keys/values for the Jinja2 cache key. This keeps TemplateResponse
+# behavior intact (deferred rendering, middleware integration) while avoiding
+# "unhashable type: 'dict'" errors coming from Jinja2's internal cache.
+env = getattr(templates, "env", None) or getattr(templates, "environment", None)
+if env is not None:
+    _orig_get_template = env.get_template
+
+    class _HashableWrapper:
+        """Make an unhashable object appear hashable for use in Jinja2 cache keys
+
+        The wrapper delegates attribute/item access to the original object so
+        templates can still read values normally, while providing a stable
+        __hash__ implementation (based on id()).
+        """
+
+        def __init__(self, obj):
+            self._obj = obj
+
+        def __getattr__(self, name):
+            return getattr(self._obj, name)
+
+        def __iter__(self):
+            return iter(self._obj)
+
+        def __len__(self):
+            try:
+                return len(self._obj)
+            except Exception:
+                return 0
+
+        def __getitem__(self, key):
+            return self._obj[key]
+
+        def __repr__(self):
+            return repr(self._obj)
+
+        def __hash__(self):
+            # id() is stable during the lifetime of the process and is fine
+            # for differentiating cache keys in this context.
+            return id(self._obj)
+
+    def _sanitize_globals(globals_mapping):
+        if not globals_mapping:
+            return globals_mapping
+        safe = {}
+        for k, v in globals_mapping.items():
+            try:
+                hash(v)
+                safe[k] = v
+            except Exception:
+                # Wrap unhashable values so they won't break Jinja2's cache key
+                safe[k] = _HashableWrapper(v)
+        return safe
+
+    def _safe_get_template(name, globals=None):
+        # Ensure any globals passed to get_template are sanitized first.
+        return _orig_get_template(name, _sanitize_globals(globals))
+
+    # Patch the environment's get_template in place.
+    env.get_template = _safe_get_template
+
 
 @app.exception_handler(AppException)
 async def app_exception_handler(
@@ -200,9 +263,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             )
         
         return templates.TemplateResponse(
-            request,
             "errors/403.html",
-            {"error": exc.detail},
+            {"request": request, "error": exc.detail},
             status_code=403,
         )
     
@@ -221,9 +283,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             )
         
         return templates.TemplateResponse(
-            request,
             "errors/404.html",
-            {},
+            {"request": request},
             status_code=404,
         )
     
