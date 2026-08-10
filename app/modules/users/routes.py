@@ -15,7 +15,15 @@ from app.utils.inspect_model import get_model_fields_sqlalchemy
 from app.modules.users.models import UserProfile
 
 router = APIRouter(prefix="/users", tags=["Users"])
+# Create Jinja2Templates but disable Jinja2's internal template cache to avoid
+# an issue where unhashable objects in the template globals can end up inside
+# the cache key and raise TypeError. Disabling the cache preserves Starlette's
+# TemplateResponse behavior while avoiding the Jinja2 cache-key bug.
 templates = Jinja2Templates(directory="app/templates")
+# Prevent Jinja2 from using a cache key that may include unhashable objects
+# (e.g., request, complex models). A cache_size of 0 disables the template
+# cache and avoids TypeError when TemplateResponse passes context to get_template.
+templates.env.cache_size = 0
 
 
 @router.get("/", response_class=HTMLResponse, name="users:list")
@@ -36,21 +44,20 @@ async def user_list(
     )
     # build dynamic fields metadata for UserProfile
     fields = get_model_fields_sqlalchemy(UserProfile)
-
-    # Render template manually to avoid passing the full context dict into
-    # Jinja2's get_template (some starlette/jinja2 versions pass the context
-    # through to get_template leading to an unhashable dict inside the
-    # template cache key).
-    template = templates.env.get_template("users/list.html")
-    content = template.render(
-        request=request,
-        users=users,
-        total=total,
-        page=page,
-        current_user=current_user,
-        fields=fields,
+    # Use Starlette's TemplateResponse to preserve middleware and deferred
+    # rendering behavior while avoiding the Jinja2 cache key issue by having
+    # disabled Jinja2's internal cache above.
+    return templates.TemplateResponse(
+        "users/list.html",
+        {
+            "request": request,
+            "users": users,
+            "total": total,
+            "page": page,
+            "current_user": current_user,
+            "fields": fields,
+        },
     )
-    return HTMLResponse(content)
 
 
 @router.get("/profile", response_class=HTMLResponse, name="users:profile")
@@ -61,12 +68,12 @@ async def my_profile(
     """Current user's profile page."""
     # Provide dynamic fields metadata to template so it can render gracefully
     fields = get_model_fields_sqlalchemy(UserProfile)
-
-    template = templates.env.get_template("users/profile.html")
-    content = template.render(
-        request=request,
-        profile=current_user,
-        current_user=current_user,
-        fields=fields,
+    return templates.TemplateResponse(
+        "users/profile.html",
+        {
+            "request": request,
+            "profile": current_user,
+            "current_user": current_user,
+            "fields": fields,
+        },
     )
-    return HTMLResponse(content)
