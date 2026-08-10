@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ resume.first_name }} {{ resume.last_name }} — AI Recruitment Platform{% endblock %}
+{% block page_title %}{{ resume.first_name }} {{ resume.last_name }}{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="/resume-parser/" class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Resume Parser
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{{ resume.first_name }} {{ resume.last_name }}</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mt-1">{{ resume.title or 'No title specified' }}</p>
+                <div class="flex gap-4 mt-4">
+                    {% if resume.email %}
+                    <a href="mailto:{{ resume.email }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">{{ resume.email }}</a>
+                    {% endif %}
+                    {% if resume.phone %}
+                    <a href="tel:{{ resume.phone }}" class="text-primary-600 hover:text-primary-700 dark:text-primary-400">{{ resume.phone }}</a>
+                    {% endif %}
+                    {% if resume.location %}
+                    <span class="text-gray-600 dark:text-gray-400">{{ resume.location }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="/resume-parser/{{ resume.id }}/edit" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Summary -->
+    {% if resume.summary %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Professional Summary</h3>
+        <p class="text-gray-700 dark:text-gray-300">{{ resume.summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Key Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Experience Level</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ resume.years_of_experience or 0 }} years</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Status</p>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ resume.status|capitalize if resume.status else 'Active' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Date Added</p>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ resume.created_at.strftime('%b %d, %Y') if resume.created_at else 'Unknown' }}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Skills</p>
+            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ resume.skills_list.count(',') + 1 if resume.skills_list else 0 }}</p>
+        </div>
+    </div>
+
+    <!-- Skills Section -->
+    {% if resume.skills_list %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Skills</h3>
+        <div class="flex flex-wrap gap-2">
+            {% for skill in resume.skills_list.split(',') %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300">
+                {{ skill.strip() }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Experience Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Work Experience</h3>
+        <div class="space-y-4">
+            <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <p class="font-medium text-gray-900 dark:text-white">{{ resume.current_company or 'Current Company' }}</p>
+                        {% if resume.title %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ resume.title }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if resume.summary %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ resume.summary }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Education Section -->
+    {% if resume.education %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Education</h3>
+        <div class="space-y-4">
+            <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <p class="font-medium text-gray-900 dark:text-white">{{ resume.education }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+        <a href="/resume-parser/{{ resume.id }}/edit" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit Resume
+        </a>
+        <a href="/candidates/create?resume_id={{ resume.id }}" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Candidate
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -73,12 +73,29 @@ async def job_create_get(
     """Render create job form."""
     fields = get_model_fields_sqlalchemy(JobPosting)
 
+    # Create a mock job object with default values for the form
+    class MockJob:
+        title = ""
+        status = "draft"
+        description = ""
+        requirements = ""
+        responsibilities = ""
+        employment_type = ""
+        work_type = ""
+        experience_min = ""
+        experience_max = ""
+        salary_min = ""
+        salary_max = ""
+        salary_currency = "USD"
+        headcount = 1
+
     context = {
         "request": request,
         "fields": fields,
         "action": "create",
         "current_user": current_user,
         "error": None,
+        "job": MockJob(),
     }
 
     return templates.TemplateResponse(
