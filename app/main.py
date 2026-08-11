@@ -179,37 +179,62 @@ if env is not None:
         globals are converted into hashable-friendly values. This wrapper is
         defensive about being installed as either a bound method or plain
         function: it inspects arguments to find the template name and globals
-        regardless of how Python passes them.
+        regardless of how Python passes them. It also logs diagnostic info
+        when the call shape is unexpected (e.g. no string template name) so
+        we can identify mis-bound or mis-invoked calls.
         """
-        # Determine (name, globals) from args/kwargs in a robust way.
+        # If called as a bound method, the first arg will be `self` (env).
+        # Drop it so positional parsing below works the same for both bound
+        # and unbound calls.
+        args_list = list(args)
+        if args_list and args_list[0] is env:
+            args_list = args_list[1:]
+
+        # Identify template name and globals argument robustly.
         name = None
         globals_arg = None
-        # Possible calling forms:
-        #  - env.get_template(name)
-        #  - env.get_template(name, globals=...)
-        #  - (if mis-bound) get_template(self, name, globals)
+
         if "name" in kwargs:
             name = kwargs.get("name")
             globals_arg = kwargs.get("globals", None)
-        elif len(args) == 1:
-            name = args[0]
-        elif len(args) >= 2:
-            # args[0] could be self if bound incorrectly
-            # try to find the first arg that looks like a template name (str)
-            for a in args:
-                if isinstance(a, str):
-                    name = a
-                    break
-            # the globals arg may be passed as the last positional arg
-            globals_arg = kwargs.get("globals", None) or (args[2] if len(args) > 2 else None)
         else:
-            name = kwargs.get("name")
-            globals_arg = kwargs.get("globals", None)
+            if len(args_list) >= 1:
+                name = args_list[0]
+            if len(args_list) >= 2:
+                globals_arg = args_list[1]
+            # kwargs may still override
+            globals_arg = kwargs.get("globals", globals_arg)
 
-        # Defensive defaults
-        if name is None:
-            # fall back: take first arg repr
-            name = str(args[0]) if args else "<unknown>"
+        # If name is not a string, try to find a string value in args/kwargs
+        if not isinstance(name, str):
+            # Attempt to locate a plausible template name in args/kwargs
+            found = None
+            for a in args_list:
+                if isinstance(a, str):
+                    found = a
+                    break
+            if not found:
+                for v in kwargs.values():
+                    if isinstance(v, str):
+                        found = v
+                        break
+            if found:
+                name = found
+            else:
+                # Diagnostic: log the call shape so we can trace the caller.
+                try:
+                    arg_summary = [f"{type(a).__name__}:{repr(a)[:200]}" for a in args_list]
+                    kw_summary = {k: type(v).__name__ for k, v in kwargs.items()}
+                except Exception:
+                    arg_summary = [str(type(a)) for a in args_list]
+                    kw_summary = {k: str(type(v)) for k, v in kwargs.items()}
+                print(f"[diag] get_template called with non-str name; args={arg_summary} kwargs={kw_summary}")
+                # Fail fast with a controlled HTTPException to avoid passing a
+                # dict into Jinja2's template loader (which causes the cache
+                # TypeError). This will be caught by our HTTP exception
+                # handler and render an error page instead of crashing the
+                # worker with an internal traceback.
+                raise HTTPException(status_code=500, detail="Template invocation error")
 
         try:
             if globals_arg:
