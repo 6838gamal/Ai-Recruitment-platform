@@ -71,15 +71,29 @@ class EnhancedJinja2Templates(Jinja2Templates):
         if request is not None and "current_user" not in context and hasattr(request.state, "current_user"):
             context["current_user"] = request.state.current_user
 
-        # Delegate to parent (name first, then context)
-        return super().TemplateResponse(
-            name,
-            context,
-            status_code=status_code,
-            headers=headers,
-            media_type=media_type,
-            background=background,
-        )
+        # Delegate to parent with the correct signature depending on whether
+        # a Request was provided. Passing request when present avoids
+        # shifting arguments and prevents Jinja2 from receiving an unhashable
+        # globals object in its cache key.
+        if request is not None:
+            return super().TemplateResponse(
+                request,
+                name,
+                context,
+                status_code=status_code,
+                headers=headers,
+                media_type=media_type,
+                background=background,
+            )
+        else:
+            return super().TemplateResponse(
+                name,
+                context,
+                status_code=status_code,
+                headers=headers,
+                media_type=media_type,
+                background=background,
+            )
 
     def get_template_with_environment(self, name: str):
         """Get template with environment configuration."""
