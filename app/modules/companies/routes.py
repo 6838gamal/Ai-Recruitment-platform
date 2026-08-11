@@ -13,7 +13,7 @@ from app.modules.companies.models import Company
 from app.utils.inspect_model import get_model_fields_sqlalchemy
 from app.dependencies import get_current_user_profile
 
-router = APIRouter(prefix="/companies", tags=["Companies"]) 
+router = APIRouter(prefix="/companies", tags=["Companies"])
 templates = EnhancedJinja2Templates(directory="app/templates")
 
 
