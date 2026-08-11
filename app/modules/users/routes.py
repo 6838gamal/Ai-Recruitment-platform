@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from urllib.parse import quote_plus
+from jinja2 import TemplateNotFound
 
 from app.database import get_db
 from app.utils.enhanced_templates import EnhancedJinja2Templates
@@ -36,8 +37,12 @@ async def list_users(request: Request, db: Session = Depends(get_db), current_us
             "users/list.html",
             {"request": request, "users": users, "fields": fields, "current_user": current_user, "attribute": getattr},
         )
+    except TemplateNotFound:
+        # Template missing: return a JSON fallback so FastAPI/Starlette can serialize it
+        return JSONResponse({"message": "Users list endpoint", "count": len(users)})
     except Exception:
-        return {"message": "Users list endpoint", "count": len(users)}
+        # Unexpected error while rendering template — re-raise so it's handled by error middleware
+        raise
 
 
 @router.get("/create", response_class=HTMLResponse, name="users:create_form")
