@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from app.utils.enhanced_templates import EnhancedJinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,7 +12,7 @@ from app.modules.accounts.models import User as Account
 from app.utils.inspect_model import get_model_fields_sqlalchemy
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"]) 
-templates = Jinja2Templates(directory="app/templates")
+templates = EnhancedJinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse, name="accounts:list")
 async def accounts_list(request: Request, db: Session = Depends(get_db), current_user=Depends(require_permission(Permission.VIEW_USERS))):
