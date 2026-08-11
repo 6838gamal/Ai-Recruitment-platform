@@ -1,154 +1,812 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+
+"""Jobs module routes."""
+
+from pathlib import Path
+from typing import Optional
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from urllib.parse import quote_plus
-from jinja2 import TemplateNotFound
 
 from app.database import get_db
-from app.utils.enhanced_templates import EnhancedJinja2Templates
-from app.modules.users.repositories import UserProfileRepository
-from app.modules.users.models import UserProfile
-from app.utils.inspect_model import get_model_fields_sqlalchemy
 from app.dependencies import get_current_user_profile
+from app.modules.companies.models import Company
+from app.modules.jobs.models import JobPosting
+from app.utils.enhanced_templates import EnhancedJinja2Templates
 
-router = APIRouter(prefix="/users", tags=["Users"])
-templates = EnhancedJinja2Templates(directory="app/templates")
+
+router = APIRouter(
+    prefix="/jobs",
+    tags=["Jobs"],
+)
+
+templates = EnhancedJinja2Templates(
+    directory="app/templates"
+)
 
 
-@router.get("/", response_class=HTMLResponse, name="users:list")
-async def list_users(request: Request, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    repo = UserProfileRepository(db)
-    users = []
+# ============================================================================
+# Database schema
+# ============================================================================
+
+def _ensure_jobs_schema(db: Session) -> None:
+    """
+    Ensure the job_postings table contains the location column.
+
+    This is kept here to support existing databases.
+    """
+
     try:
-        if current_user:
-            users = repo.get_by_company(current_user.company_id)
-        else:
-            users = repo.get_all()  # fallback to all if available
-    except Exception:
-        # best-effort: return empty list on repository issues
-        users = []
-
-    fields = get_model_fields_sqlalchemy(UserProfile)
-
-    try:
-        return templates.TemplateResponse(
-            request,
-            "users/list.html",
-            {"request": request, "users": users, "fields": fields, "current_user": current_user, "attribute": getattr},
+        db.execute(
+            text(
+                """
+                ALTER TABLE job_postings
+                ADD COLUMN IF NOT EXISTS location VARCHAR(255)
+                """
+            )
         )
-    except TemplateNotFound:
-        # Template missing: return a JSON fallback so FastAPI/Starlette can serialize it
-        return JSONResponse({"message": "Users list endpoint", "count": len(users)})
+
+        db.commit()
+
     except Exception:
-        # Unexpected error while rendering template — re-raise so it's handled by error middleware
+        db.rollback()
         raise
 
 
-@router.get("/create", response_class=HTMLResponse, name="users:create_form")
-async def create_user_form(request: Request, current_user=Depends(get_current_user_profile)):
-    fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        request,
-        "users/form.html",
-        {"request": request, "action": "create", "fields": fields, "current_user": current_user, "attribute": getattr},
+# ============================================================================
+# Template helper
+# ============================================================================
+
+def _job_template(preferred: str, fallback: str) -> str:
+    """Pick an existing jobs template."""
+
+    project_root = Path(__file__).resolve().parents[2]
+    templates_dir = project_root / "templates"
+
+    preferred_path = templates_dir / preferred
+
+    if preferred_path.exists():
+        return preferred
+
+    fallback_path = templates_dir / fallback
+
+    if fallback_path.exists():
+        return fallback
+
+    return preferred
+
+
+# ============================================================================
+# Companies helper
+# ============================================================================
+
+def _get_companies(db: Session) -> list[Company]:
+    """Return all companies for the job form."""
+
+    return (
+        db.query(Company)
+        .order_by(Company.name.asc())
+        .all()
     )
 
 
-@router.post("/create")
-async def create_user_submit(request: Request, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    form = await request.form()
+# ============================================================================
+# Job form data helper
+# ============================================================================
 
-    data = {
-        "user_id": form.get("user_id"),
-        "company_id": current_user.company_id if current_user else None,
-        "role": form.get("role") or "user",
-        "first_name": form.get("first_name"),
-        "last_name": form.get("last_name"),
-        "phone": form.get("phone"),
-        "avatar_url": None,
-        "job_title": form.get("job_title"),
-        "department": form.get("department"),
+def _job_form_data(
+    title: str = "",
+    description: str = "",
+    location: str = "",
+    status: str = "draft",
+    company_id: str = "",
+) -> dict:
+    """Build job form data for template rendering."""
+
+    return {
+        "title": title,
+        "description": description,
+        "location": location,
+        "status": status,
+        "company_id": company_id,
     }
 
-    repo = UserProfileRepository(db)
+
+# ============================================================================
+# Jobs list
+# ============================================================================
+
+@router.get(
+    "/",
+    response_class=HTMLResponse,
+)
+async def list_jobs(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Render the jobs list page."""
+
+    _ensure_jobs_schema(db)
+
+    jobs = (
+        db.query(JobPosting)
+        .order_by(JobPosting.created_at.desc())
+        .all()
+    )
+
+    return templates.TemplateResponse(
+        request,
+        "jobs/list.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "jobs": jobs,
+        },
+    )
+
+
+# ============================================================================
+# Create job form
+# ============================================================================
+
+@router.get(
+    "/create",
+    response_class=HTMLResponse,
+)
+async def create_job_form(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Render the job creation form."""
+
+    _ensure_jobs_schema(db)
+
+    template = _job_template(
+        "jobs/form.html",
+        "jobs/create.html",
+    )
+
+    companies = _get_companies(db)
+
+    job = _job_form_data()
+
+    return templates.TemplateResponse(
+        request,
+        template,
+        {
+            "request": request,
+            "current_user": current_user,
+            "job": job,
+            "companies": companies,
+            "action": "create",
+        },
+    )
+
+
+# ============================================================================
+# Create job
+# ============================================================================
+
+@router.post(
+    "/create",
+)
+async def create_job_submit(
+    request: Request,
+    title: str = Form(...),
+    location: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    status: str = Form("draft"),
+    company_id: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Create a new job posting."""
+
+    template = _job_template(
+        "jobs/form.html",
+        "jobs/create.html",
+    )
+
+    # ------------------------------------------------------------------------
+    # Ensure database schema
+    # ------------------------------------------------------------------------
+
     try:
-        profile = repo.create(data)
-        return RedirectResponse(url=f"/users/{quote_plus(str(profile.id))}", status_code=302)
-    except IntegrityError as exc:
-        db.rollback()
-        fields = get_model_fields_sqlalchemy(UserProfile)
-        error = str(exc)
+        _ensure_jobs_schema(db)
+
+    except Exception as exc:
+        companies = _get_companies(db)
+
         return templates.TemplateResponse(
             request,
-            "users/form.html",
-            {"request": request, "action": "create", "fields": fields, "error": error, "form_values": form, "current_user": current_user, "attribute": getattr},
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": f"Database schema error: {exc}",
+                "job": _job_form_data(
+                    title=title or "",
+                    description=description or "",
+                    location=location or "",
+                    status=status or "draft",
+                    company_id=company_id or "",
+                ),
+                "companies": companies,
+                "action": "create",
+            },
+            status_code=500,
         )
 
+    # ------------------------------------------------------------------------
+    # Load companies
+    # ------------------------------------------------------------------------
 
-@router.get("/{id}", response_class=HTMLResponse, name="users:detail")
-async def user_detail(request: Request, id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    repo = UserProfileRepository(db)
-    profile = repo.get(id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="User not found")
-    fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        request,
-        "users/detail.html",
-        {"request": request, "user": profile, "fields": fields, "current_user": current_user, "attribute": getattr},
-    )
+    companies = _get_companies(db)
 
+    # ------------------------------------------------------------------------
+    # Validate current user
+    # ------------------------------------------------------------------------
 
-@router.get("/{id}/edit", response_class=HTMLResponse, name="users:edit_form")
-async def edit_user_form(request: Request, id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    repo = UserProfileRepository(db)
-    profile = repo.get(id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="User not found")
-    fields = get_model_fields_sqlalchemy(UserProfile)
-    return templates.TemplateResponse(
-        request,
-        "users/form.html",
-        {"request": request, "action": "edit", "user": profile, "fields": fields, "current_user": current_user, "attribute": getattr},
-    )
+    if not current_user or not current_user.user_id:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Unable to determine the current user.",
+                "job": _job_form_data(
+                    title=title or "",
+                    description=description or "",
+                    location=location or "",
+                    status=status or "draft",
+                    company_id=company_id or "",
+                ),
+                "companies": companies,
+                "action": "create",
+            },
+            status_code=401,
+        )
 
+    # ------------------------------------------------------------------------
+    # Validate title
+    # ------------------------------------------------------------------------
 
-@router.post("/{id}/edit")
-async def edit_user_submit(request: Request, id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    form = await request.form()
-    repo = UserProfileRepository(db)
-    profile = repo.get(id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="User not found")
+    title = title.strip()
 
-    data = {
-        "first_name": form.get("first_name") or profile.first_name,
-        "last_name": form.get("last_name") or profile.last_name,
-        "phone": form.get("phone") or profile.phone,
-        "job_title": form.get("job_title") or profile.job_title,
-        "department": form.get("department") or profile.department,
-        "role": form.get("role") or profile.role,
+    if not title:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Job title is required.",
+                "job": _job_form_data(
+                    title="",
+                    description=description or "",
+                    location=location or "",
+                    status=status or "draft",
+                    company_id=company_id or "",
+                ),
+                "companies": companies,
+                "action": "create",
+            },
+            status_code=400,
+        )
+
+    # ------------------------------------------------------------------------
+    # Validate description
+    # ------------------------------------------------------------------------
+
+    description = description.strip() if description else ""
+
+    if not description:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Job description is required.",
+                "job": _job_form_data(
+                    title=title,
+                    description="",
+                    location=location or "",
+                    status=status or "draft",
+                    company_id=company_id or "",
+                ),
+                "companies": companies,
+                "action": "create",
+            },
+            status_code=400,
+        )
+
+    # ------------------------------------------------------------------------
+    # Validate status
+    # ------------------------------------------------------------------------
+
+    allowed_statuses = {
+        "draft",
+        "published",
+        "closed",
     }
-    try:
-        updated = repo.update(profile, data)
-        return RedirectResponse(url=f"/users/{quote_plus(str(updated.id))}", status_code=302)
-    except IntegrityError as exc:
-        db.rollback()
-        fields = get_model_fields_sqlalchemy(UserProfile)
-        error = str(exc)
-        return templates.TemplateResponse(
-            request,
-            "users/form.html",
-            {"request": request, "action": "edit", "user": profile, "fields": fields, "error": error, "form_values": form, "current_user": current_user, "attribute": getattr},
+
+    if status not in allowed_statuses:
+        status = "draft"
+
+    # ------------------------------------------------------------------------
+    # Parse company ID
+    # ------------------------------------------------------------------------
+
+    parsed_company_id: Optional[UUID] = None
+
+    if company_id:
+        try:
+            parsed_company_id = UUID(company_id)
+
+        except (ValueError, AttributeError):
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Invalid company ID.",
+                    "job": _job_form_data(
+                        title=title,
+                        description=description,
+                        location=location or "",
+                        status=status,
+                        company_id=company_id,
+                    ),
+                    "companies": companies,
+                    "action": "create",
+                },
+                status_code=400,
+            )
+
+        selected_company = (
+            db.query(Company)
+            .filter(Company.id == parsed_company_id)
+            .first()
         )
 
+        if not selected_company:
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Selected company was not found.",
+                    "job": _job_form_data(
+                        title=title,
+                        description=description,
+                        location=location or "",
+                        status=status,
+                        company_id=company_id,
+                    ),
+                    "companies": companies,
+                    "action": "create",
+                },
+                status_code=400,
+            )
 
-@router.post("/{id}/delete")
-async def delete_user(request: Request, id: str, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
-    repo = UserProfileRepository(db)
-    profile = repo.get(id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="User not found")
-    repo.soft_delete(profile)
-    return RedirectResponse(url="/users/", status_code=302)
+    # ------------------------------------------------------------------------
+    # Create JobPosting
+    # ------------------------------------------------------------------------
+
+    job = JobPosting(
+        title=title,
+        description=description,
+        location=location.strip() if location else None,
+        status=status,
+        company_id=parsed_company_id,
+        created_by_id=current_user.user_id,
+    )
+
+    # ------------------------------------------------------------------------
+    # Save
+    # ------------------------------------------------------------------------
+
+    try:
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+
+    except Exception as exc:
+        db.rollback()
+
+        companies = _get_companies(db)
+
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": f"Failed to create job: {exc}",
+                "job": _job_form_data(
+                    title=title,
+                    description=description,
+                    location=location or "",
+                    status=status,
+                    company_id=company_id or "",
+                ),
+                "companies": companies,
+                "action": "create",
+            },
+            status_code=500,
+        )
+
+    # ------------------------------------------------------------------------
+    # Redirect to jobs table
+    # ------------------------------------------------------------------------
+
+    return RedirectResponse(
+        url="/jobs/",
+        status_code=303,
+    )
+
+
+# ============================================================================
+# Job details
+# ============================================================================
+
+@router.get(
+    "/{job_id}",
+    response_class=HTMLResponse,
+)
+async def job_detail(
+    job_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Render a single job."""
+
+    _ensure_jobs_schema(db)
+
+    job = (
+        db.query(JobPosting)
+        .filter(JobPosting.id == job_id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "jobs/detail.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "job": job,
+        },
+    )
+
+
+# ============================================================================
+# Edit job form
+# ============================================================================
+
+@router.get(
+    "/{job_id}/edit",
+    response_class=HTMLResponse,
+)
+async def edit_job_form(
+    job_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Render the edit job form."""
+
+    _ensure_jobs_schema(db)
+
+    job = (
+        db.query(JobPosting)
+        .filter(JobPosting.id == job_id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    template = _job_template(
+        "jobs/form.html",
+        "jobs/create.html",
+    )
+
+    companies = _get_companies(db)
+
+    return templates.TemplateResponse(
+        request,
+        template,
+        {
+            "request": request,
+            "current_user": current_user,
+            "job": job,
+            "companies": companies,
+            "action": "edit",
+        },
+    )
+
+
+# ============================================================================
+# Update job
+# ============================================================================
+
+@router.post(
+    "/{job_id}/edit",
+)
+async def edit_job_submit(
+    job_id: UUID,
+    request: Request,
+    title: str = Form(...),
+    location: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    status: str = Form("draft"),
+    company_id: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Update an existing job."""
+
+    template = _job_template(
+        "jobs/form.html",
+        "jobs/create.html",
+    )
+
+    _ensure_jobs_schema(db)
+
+    # ------------------------------------------------------------------------
+    # Find job
+    # ------------------------------------------------------------------------
+
+    job = (
+        db.query(JobPosting)
+        .filter(JobPosting.id == job_id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    # ------------------------------------------------------------------------
+    # Load companies
+    # ------------------------------------------------------------------------
+
+    companies = _get_companies(db)
+
+    # ------------------------------------------------------------------------
+    # Validate current user
+    # ------------------------------------------------------------------------
+
+    if not current_user or not current_user.user_id:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Unable to determine the current user.",
+                "job": job,
+                "companies": companies,
+                "action": "edit",
+            },
+            status_code=401,
+        )
+
+    # ------------------------------------------------------------------------
+    # Validate title
+    # ------------------------------------------------------------------------
+
+    title = title.strip()
+
+    if not title:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Job title is required.",
+                "job": job,
+                "companies": companies,
+                "action": "edit",
+            },
+            status_code=400,
+        )
+
+    # ------------------------------------------------------------------------
+    # Validate description
+    # ------------------------------------------------------------------------
+
+    description = description.strip() if description else ""
+
+    if not description:
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Job description is required.",
+                "job": job,
+                "companies": companies,
+                "action": "edit",
+            },
+            status_code=400,
+        )
+
+    # ------------------------------------------------------------------------
+    # Validate status
+    # ------------------------------------------------------------------------
+
+    allowed_statuses = {
+        "draft",
+        "published",
+        "closed",
+    }
+
+    if status not in allowed_statuses:
+        status = "draft"
+
+    # ------------------------------------------------------------------------
+    # Parse company ID
+    # ------------------------------------------------------------------------
+
+    parsed_company_id: Optional[UUID] = None
+
+    if company_id:
+        try:
+            parsed_company_id = UUID(company_id)
+
+        except (ValueError, AttributeError):
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Invalid company ID.",
+                    "job": job,
+                    "companies": companies,
+                    "action": "edit",
+                },
+                status_code=400,
+            )
+
+        selected_company = (
+            db.query(Company)
+            .filter(Company.id == parsed_company_id)
+            .first()
+        )
+
+        if not selected_company:
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Selected company was not found.",
+                    "job": job,
+                    "companies": companies,
+                    "action": "edit",
+                },
+                status_code=400,
+            )
+
+    # ------------------------------------------------------------------------
+    # Update
+    # ------------------------------------------------------------------------
+
+    job.title = title
+    job.description = description
+    job.location = location.strip() if location else None
+    job.status = status
+    job.company_id = parsed_company_id
+
+    # Keep created_by_id unchanged during edit.
+    # The original creator should remain the creator of the job.
+
+    # ------------------------------------------------------------------------
+    # Save changes
+    # ------------------------------------------------------------------------
+
+    try:
+        db.commit()
+        db.refresh(job)
+
+    except Exception as exc:
+        db.rollback()
+
+        job = (
+            db.query(JobPosting)
+            .filter(JobPosting.id == job_id)
+            .first()
+        )
+
+        companies = _get_companies(db)
+
+        return templates.TemplateResponse(
+            request,
+            template,
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": f"Failed to update job: {exc}",
+                "job": job,
+                "companies": companies,
+                "action": "edit",
+            },
+            status_code=500,
+        )
+
+    # ------------------------------------------------------------------------
+    # Redirect to jobs table
+    # ------------------------------------------------------------------------
+
+    return RedirectResponse(
+        url="/jobs/",
+        status_code=303,
+    )
+
+
+# ============================================================================
+# Delete job
+# ============================================================================
+
+@router.post(
+    "/{job_id}/delete",
+)
+async def delete_job(
+    job_id: UUID,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
+):
+    """Delete a job."""
+
+    _ensure_jobs_schema(db)
+
+    job = (
+        db.query(JobPosting)
+        .filter(JobPosting.id == job_id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    try:
+        db.delete(job)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return RedirectResponse(
+        url="/jobs/",
+        status_code=303,
+    )
