@@ -1,4 +1,4 @@
-```python
+
 """Candidates module routes."""
 
 from fastapi import APIRouter, Depends, Request
@@ -166,4 +166,4 @@ async def edit_candidate_submit(
         ),
         status_code=303,
     )
-```
+
