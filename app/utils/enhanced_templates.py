@@ -103,6 +103,11 @@ class EnhancedJinja2Templates(Jinja2Templates):
         self.env.filters.setdefault('urljoin', self._urljoin_filter)
         self.env.filters.setdefault('safe_url', self._safe_url_filter)
 
+        # Provide handy globals that templates expect (attribute/getattr helper)
+        # Some templates call `attribute(obj, name)` — ensure this builtin is available.
+        # Expose Python's getattr under the name 'attribute' so templates can use it.
+        self.env.globals.setdefault('attribute', getattr)
+
         return template
 
     @staticmethod
