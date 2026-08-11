@@ -7,6 +7,7 @@ Modular Monolith architecture: one application, 17 internal modules.
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+import types
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -172,19 +173,47 @@ if env is not None:
         # Protect startup from any unexpected env shape.
         print("[warn] Failed to sanitize env.globals — continuing with cache disabled")
 
-    def _safe_get_template(name, globals=None):
+    def _safe_get_template(*args, **kwargs):
         """
         Safely call the original get_template while ensuring any per-call
-        globals are converted into hashable-friendly values. We try the
-        sanitized path first; if Jinja2 still raises a TypeError (cache key
-        building with nested unhashable data), fall back to calling the
-        original without per-call globals which avoids inserting them into
-        the cache key. Any remaining failures are caught and logged to avoid
-        crashing the whole ASGI worker.
+        globals are converted into hashable-friendly values. This wrapper is
+        defensive about being installed as either a bound method or plain
+        function: it inspects arguments to find the template name and globals
+        regardless of how Python passes them.
         """
+        # Determine (name, globals) from args/kwargs in a robust way.
+        name = None
+        globals_arg = None
+        # Possible calling forms:
+        #  - env.get_template(name)
+        #  - env.get_template(name, globals=...)
+        #  - (if mis-bound) get_template(self, name, globals)
+        if "name" in kwargs:
+            name = kwargs.get("name")
+            globals_arg = kwargs.get("globals", None)
+        elif len(args) == 1:
+            name = args[0]
+        elif len(args) >= 2:
+            # args[0] could be self if bound incorrectly
+            # try to find the first arg that looks like a template name (str)
+            for a in args:
+                if isinstance(a, str):
+                    name = a
+                    break
+            # the globals arg may be passed as the last positional arg
+            globals_arg = kwargs.get("globals", None) or (args[2] if len(args) > 2 else None)
+        else:
+            name = kwargs.get("name")
+            globals_arg = kwargs.get("globals", None)
+
+        # Defensive defaults
+        if name is None:
+            # fall back: take first arg repr
+            name = str(args[0]) if args else "<unknown>"
+
         try:
-            if globals:
-                safe_globals = _sanitize_globals(globals)
+            if globals_arg:
+                safe_globals = _sanitize_globals(globals_arg)
                 return _orig_get_template(name, globals=safe_globals)
             return _orig_get_template(name)
         except TypeError as e:
@@ -201,8 +230,13 @@ if env is not None:
             print(f"[error] Unexpected error in _safe_get_template for {name}: {e}")
             raise HTTPException(status_code=500, detail="Template system error")
 
-    # Patch the environment's get_template in place.
-    env.get_template = _safe_get_template
+    # Bind the wrapper to the env instance so it behaves exactly like a
+    # method (ensures 'self' semantics are correct).
+    try:
+        env.get_template = types.MethodType(_safe_get_template, env)
+    except Exception:
+        # Fallback: assign function directly
+        env.get_template = _safe_get_template
 
 
 @app.exception_handler(AppException)
@@ -284,7 +318,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                     "success": False,
                     "error": {
                         "code": "UNAUTHORIZED",
-                        "message": "جل��تك انتهت. يرجى تسجيل الدخول مجددًا",
+                        "message": "جلستك انتهت. يرجى تسجيل الدخول مجددًا",
                     },
                 },
             )
