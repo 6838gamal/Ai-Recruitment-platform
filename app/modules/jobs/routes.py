@@ -39,10 +39,14 @@ async def create_job_form(request: Request, current_user = Depends(get_current_u
     This will prefer jobs/form.html if present, otherwise jobs/create.html.
     """
     template = _job_template("jobs/form.html", "jobs/create.html")
+
+    # Provide an explicit `job` object (empty dict) so templates that reference
+    # `job.title` / `job.whatever` do not error with "'job' is undefined".
+    # Using an empty dict is compatible with Jinja's attribute/item lookup.
     return templates.TemplateResponse(
         request,
         template,
-        {"request": request, "current_user": current_user}
+        {"request": request, "current_user": current_user, "job": {} }
     )
 
 
@@ -67,10 +71,13 @@ async def create_job_submit(
             raise ValueError("Title is required")
     except Exception as exc:
         template = _job_template("jobs/form.html", "jobs/create.html")
+        # Pass a `job` object containing the submitted values so the template
+        # can re-populate form fields instead of failing on missing `job`.
+        job_context = {"title": title or "", "location": location or "", "description": description or ""}
         return templates.TemplateResponse(
             request,
             template,
-            {"request": request, "current_user": current_user, "error": str(exc), "title": title, "location": location, "description": description},
+            {"request": request, "current_user": current_user, "error": str(exc), "job": job_context},
         )
 
     # On success redirect to jobs list (replace with created item's page if desired)
