@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user_profile
+from app.modules.companies.models import Company
 from app.modules.jobs.models import JobPosting
 from app.utils.enhanced_templates import EnhancedJinja2Templates
 
@@ -34,8 +35,7 @@ def _ensure_jobs_schema(db: Session) -> None:
     """
     Ensure the job_postings table matches the JobPosting model.
 
-    This keeps the fix inside this single routes file.
-    If the location column already exists, nothing happens.
+    Adds the location column if it does not already exist.
     """
 
     try:
@@ -79,6 +79,25 @@ def _job_template(preferred: str, fallback: str) -> str:
 
 
 # ============================================================================
+# Companies helper
+# ============================================================================
+
+def _get_companies(db: Session) -> list[Company]:
+    """
+    Load all companies for the job form.
+
+    The create/edit templates use this list to populate
+    the company dropdown.
+    """
+
+    return (
+        db.query(Company)
+        .order_by(Company.name.asc())
+        .all()
+    )
+
+
+# ============================================================================
 # Jobs list
 # ============================================================================
 
@@ -93,7 +112,6 @@ async def list_jobs(
 ):
     """Render the jobs list page."""
 
-    # Fix database schema before SQLAlchemy queries JobPosting.
     _ensure_jobs_schema(db)
 
     jobs = (
@@ -123,9 +141,12 @@ async def list_jobs(
 )
 async def create_job_form(
     request: Request,
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user_profile),
 ):
     """Render the job creation form."""
+
+    _ensure_jobs_schema(db)
 
     template = _job_template(
         "jobs/form.html",
@@ -134,6 +155,9 @@ async def create_job_form(
 
     job = {}
 
+    # Load companies for the dropdown.
+    companies = _get_companies(db)
+
     return templates.TemplateResponse(
         request,
         template,
@@ -141,6 +165,7 @@ async def create_job_form(
             "request": request,
             "current_user": current_user,
             "job": job,
+            "companies": companies,
             "action": "create",
         },
     )
@@ -178,6 +203,8 @@ async def create_job_submit(
         _ensure_jobs_schema(db)
 
     except Exception as exc:
+        companies = _get_companies(db)
+
         return templates.TemplateResponse(
             request,
             template,
@@ -192,10 +219,17 @@ async def create_job_submit(
                     "status": status or "draft",
                     "company_id": company_id or "",
                 },
+                "companies": companies,
                 "action": "create",
             },
             status_code=500,
         )
+
+    # ------------------------------------------------------------------------
+    # Load companies
+    # ------------------------------------------------------------------------
+
+    companies = _get_companies(db)
 
     # ------------------------------------------------------------------------
     # Validate title
@@ -218,6 +252,7 @@ async def create_job_submit(
                     "status": status or "draft",
                     "company_id": company_id or "",
                 },
+                "companies": companies,
                 "action": "create",
             },
             status_code=400,
@@ -261,6 +296,35 @@ async def create_job_submit(
                         "status": status,
                         "company_id": company_id,
                     },
+                    "companies": companies,
+                    "action": "create",
+                },
+                status_code=400,
+            )
+
+        # Verify that the selected company actually exists.
+        selected_company = (
+            db.query(Company)
+            .filter(Company.id == parsed_company_id)
+            .first()
+        )
+
+        if not selected_company:
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Selected company was not found.",
+                    "job": {
+                        "title": title,
+                        "location": location or "",
+                        "description": description or "",
+                        "status": status,
+                        "company_id": company_id,
+                    },
+                    "companies": companies,
                     "action": "create",
                 },
                 status_code=400,
@@ -290,6 +354,9 @@ async def create_job_submit(
     except Exception as exc:
         db.rollback()
 
+        # Reload companies after rollback so the dropdown remains available.
+        companies = _get_companies(db)
+
         return templates.TemplateResponse(
             request,
             template,
@@ -304,6 +371,7 @@ async def create_job_submit(
                     "status": status,
                     "company_id": company_id or "",
                 },
+                "companies": companies,
                 "action": "create",
             },
             status_code=500,
@@ -395,6 +463,9 @@ async def edit_job_form(
         "jobs/create.html",
     )
 
+    # Load companies for the edit dropdown.
+    companies = _get_companies(db)
+
     return templates.TemplateResponse(
         request,
         template,
@@ -402,6 +473,7 @@ async def edit_job_form(
             "request": request,
             "current_user": current_user,
             "job": job,
+            "companies": companies,
             "action": "edit",
         },
     )
@@ -455,6 +527,12 @@ async def edit_job_submit(
         )
 
     # ------------------------------------------------------------------------
+    # Load companies
+    # ------------------------------------------------------------------------
+
+    companies = _get_companies(db)
+
+    # ------------------------------------------------------------------------
     # Validate title
     # ------------------------------------------------------------------------
 
@@ -469,6 +547,7 @@ async def edit_job_submit(
                 "current_user": current_user,
                 "error": "Job title is required.",
                 "job": job,
+                "companies": companies,
                 "action": "edit",
             },
             status_code=400,
@@ -506,6 +585,29 @@ async def edit_job_submit(
                     "current_user": current_user,
                     "error": "Invalid company ID.",
                     "job": job,
+                    "companies": companies,
+                    "action": "edit",
+                },
+                status_code=400,
+            )
+
+        # Verify selected company exists.
+        selected_company = (
+            db.query(Company)
+            .filter(Company.id == parsed_company_id)
+            .first()
+        )
+
+        if not selected_company:
+            return templates.TemplateResponse(
+                request,
+                template,
+                {
+                    "request": request,
+                    "current_user": current_user,
+                    "error": "Selected company was not found.",
+                    "job": job,
+                    "companies": companies,
                     "action": "edit",
                 },
                 status_code=400,
@@ -543,6 +645,16 @@ async def edit_job_submit(
     except Exception as exc:
         db.rollback()
 
+        # Reload job after rollback.
+        job = (
+            db.query(JobPosting)
+            .filter(JobPosting.id == job_id)
+            .first()
+        )
+
+        # Reload companies after rollback.
+        companies = _get_companies(db)
+
         return templates.TemplateResponse(
             request,
             template,
@@ -551,6 +663,7 @@ async def edit_job_submit(
                 "current_user": current_user,
                 "error": f"Failed to update job: {exc}",
                 "job": job,
+                "companies": companies,
                 "action": "edit",
             },
             status_code=500,
@@ -606,3 +719,4 @@ async def delete_job(
         url="/jobs/",
         status_code=303,
     )
+
