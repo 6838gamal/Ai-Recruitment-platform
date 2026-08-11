@@ -1,25 +1,291 @@
+
 {% extends "base.html" %}
+
+{% block title %}Edit Candidate - AI Recruitment Platform{% endblock %}
+
 {% block page_title %}Edit Candidate{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <h2 class="text-2xl font-bold">Edit Candidate</h2>
-  <form method="post" action="{{ request.url_for('candidates:edit_submit', candidate_id=candidate.id) }}" class="mt-4 space-y-4">
-    <div>
-      <label class="block text-sm font-medium">First name</label>
-      <input name="first_name" value="{{ candidate.first_name or '' }}" required class="mt-1 block w-full rounded-md border px-3 py-2">
+
+<div class="max-w-3xl mx-auto px-4 py-6">
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                Edit Candidate
+            </h1>
+
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Update candidate information
+            </p>
+        </div>
+
+
+        <form
+            method="post"
+            action="{{ request.url_for('candidates:edit_submit', candidate_id=candidate.id) }}"
+            class="space-y-5"
+        >
+
+            <!-- First Name -->
+            <div>
+                <label
+                    for="first_name"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    First name
+                </label>
+
+                <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    value="{{ candidate.first_name or '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Last Name -->
+            <div>
+                <label
+                    for="last_name"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Last name
+                </label>
+
+                <input
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    value="{{ candidate.last_name or '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Email -->
+            <div>
+                <label
+                    for="email"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Email
+                </label>
+
+                <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value="{{ candidate.email or '' }}"
+                    required
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Phone -->
+            <div>
+                <label
+                    for="phone"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Phone
+                </label>
+
+                <input
+                    id="phone"
+                    name="phone"
+                    type="text"
+                    value="{{ candidate.phone or '' }}"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Location -->
+            <div>
+                <label
+                    for="location"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Location
+                </label>
+
+                <input
+                    id="location"
+                    name="location"
+                    type="text"
+                    value="{{ candidate.location or '' }}"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- LinkedIn -->
+            <div>
+                <label
+                    for="linkedin_url"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    LinkedIn URL
+                </label>
+
+                <input
+                    id="linkedin_url"
+                    name="linkedin_url"
+                    type="url"
+                    value="{{ candidate.linkedin_url or '' }}"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Portfolio -->
+            <div>
+                <label
+                    for="portfolio_url"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Portfolio URL
+                </label>
+
+                <input
+                    id="portfolio_url"
+                    name="portfolio_url"
+                    type="url"
+                    value="{{ candidate.portfolio_url or '' }}"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Status -->
+            <div>
+                <label
+                    for="status"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Status
+                </label>
+
+                <select
+                    id="status"
+                    name="status"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+                    <option value="new" {% if candidate.status == "new" %}selected{% endif %}>
+                        New
+                    </option>
+
+                    <option value="screening" {% if candidate.status == "screening" %}selected{% endif %}>
+                        Screening
+                    </option>
+
+                    <option value="interview" {% if candidate.status == "interview" %}selected{% endif %}>
+                        Interview
+                    </option>
+
+                    <option value="shortlisted" {% if candidate.status == "shortlisted" %}selected{% endif %}>
+                        Shortlisted
+                    </option>
+
+                    <option value="hired" {% if candidate.status == "hired" %}selected{% endif %}>
+                        Hired
+                    </option>
+
+                    <option value="rejected" {% if candidate.status == "rejected" %}selected{% endif %}>
+                        Rejected
+                    </option>
+                </select>
+            </div>
+
+
+            <!-- Source -->
+            <div>
+                <label
+                    for="source"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Source
+                </label>
+
+                <input
+                    id="source"
+                    name="source"
+                    type="text"
+                    value="{{ candidate.source or '' }}"
+                    placeholder="LinkedIn, Website, Referral..."
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Summary -->
+            <div>
+                <label
+                    for="summary"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Summary
+                </label>
+
+                <textarea
+                    id="summary"
+                    name="summary"
+                    rows="5"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >{{ candidate.summary or '' }}</textarea>
+            </div>
+
+
+            <!-- Avatar URL -->
+            <div>
+                <label
+                    for="avatar_url"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                    Avatar URL
+                </label>
+
+                <input
+                    id="avatar_url"
+                    name="avatar_url"
+                    type="url"
+                    value="{{ candidate.avatar_url or '' }}"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                >
+            </div>
+
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3 pt-4">
+
+                <button
+                    type="submit"
+                    class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors"
+                >
+                    Save Changes
+                </button>
+
+                <a
+                    href="{{ request.url_for('candidates:view', candidate_id=candidate.id) }}"
+                    class="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
     </div>
-    <div>
-      <label class="block text-sm font-medium">Last name</label>
-      <input name="last_name" value="{{ candidate.last_name or '' }}" class="mt-1 block w-full rounded-md border px-3 py-2">
-    </div>
-    <div>
-      <label class="block text-sm font-medium">Email</label>
-      <input name="email" type="email" value="{{ candidate.email or '' }}" required class="mt-1 block w-full rounded-md border px-3 py-2">
-    </div>
-    <div>
-      <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md">Save</button>
-      <a href="{{ request.url_for('candidates:list') }}" class="ml-2 text-sm text-gray-600">Cancel</a>
-    </div>
-  </form>
+
 </div>
+
 {% endblock %}
+
