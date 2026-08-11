@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}User — AI Recruitment Platform{% endblock %}
+{% block page_title %}User{% endblock %}
+{% block content %}
+<div class="p-6 max-w-3xl">
+  {% from 'partials/dynamic_detail.html' import dynamic_detail %}
+  {{ dynamic_detail(user, fields, title_attr='full_name') }}
+  <div class="mt-4">
+    <a href="/users/{{ user.id }}/edit" class="px-4 py-2 bg-primary-600 text-white rounded-lg">Edit</a>
+    <a href="/users/" class="px-4 py-2 border rounded-lg ml-2">Back</a>
+  </div>
+</div>
+{% endblock %}
