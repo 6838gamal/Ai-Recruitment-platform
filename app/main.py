@@ -104,7 +104,11 @@ if env is not None:
     # cache key construction includes unhashable values. This is a safe
     # short-term mitigation; it can be removed/replaced once we sanitize
     # env.globals or ensure only hashable values are used in cache keys.
-    env.cache = {}
+    try:
+        env.cache = {}
+    except Exception:
+        # If env doesn't support cache assignment for some reason, ignore.
+        pass
 
     _orig_get_template = env.get_template
 
@@ -155,6 +159,19 @@ if env is not None:
                 safe[k] = _HashableWrapper(v)
         return safe
 
+    # Sanitize env.globals (wrap any unhashable values so they don't break
+    # Jinja2's cache key construction). This helps when TemplateResponse or
+    # application code sets complex globals at environment level.
+    try:
+        for _k, _v in list(env.globals.items()):
+            try:
+                hash(_v)
+            except Exception:
+                env.globals[_k] = _HashableWrapper(_v)
+    except Exception:
+        # Protect startup from any unexpected env shape.
+        print("[warn] Failed to sanitize env.globals — continuing with cache disabled")
+
     def _safe_get_template(name, globals=None):
         """
         Safely call the original get_template while ensuring any per-call
@@ -162,18 +179,27 @@ if env is not None:
         sanitized path first; if Jinja2 still raises a TypeError (cache key
         building with nested unhashable data), fall back to calling the
         original without per-call globals which avoids inserting them into
-        the cache key.
+        the cache key. Any remaining failures are caught and logged to avoid
+        crashing the whole ASGI worker.
         """
         try:
             if globals:
                 safe_globals = _sanitize_globals(globals)
                 return _orig_get_template(name, globals=safe_globals)
             return _orig_get_template(name)
-        except TypeError:
-            # Best-effort fallback: call without globals to avoid unhashable
-            # objects appearing in the cache key. This may be slightly less
-            # efficient for caching but prevents the server error.
-            return _orig_get_template(name)
+        except TypeError as e:
+            # Log and attempt a best-effort fallback
+            print(f"[warn] Jinja2 get_template TypeError for {name}: {e}")
+            try:
+                return _orig_get_template(name)
+            except Exception as e2:
+                print(f"[error] Jinja2 get_template failed after fallback for {name}: {e2}")
+                # As a last resort, raise HTTPException so upper handlers can
+                # render an error page without exposing the internal traceback.
+                raise HTTPException(status_code=500, detail="Template rendering error")
+        except Exception as e:
+            print(f"[error] Unexpected error in _safe_get_template for {name}: {e}")
+            raise HTTPException(status_code=500, detail="Template system error")
 
     # Patch the environment's get_template in place.
     env.get_template = _safe_get_template
@@ -258,7 +284,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                     "success": False,
                     "error": {
                         "code": "UNAUTHORIZED",
-                        "message": "جلستك انتهت. يرجى تسجيل الدخول مجددًا",
+                        "message": "جل��تك انتهت. يرجى تسجيل الدخول مجددًا",
                     },
                 },
             )
