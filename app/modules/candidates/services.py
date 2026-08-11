@@ -1,4 +1,4 @@
-```python
+
 """Candidates module services."""
 
 from uuid import UUID
@@ -146,4 +146,4 @@ class CandidateService(BaseService):
         self.db.commit()
 
         return True
-```
+
