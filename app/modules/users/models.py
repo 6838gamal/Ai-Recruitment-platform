@@ -1,47 +1,93 @@
-"""Users module SQLAlchemy models."""
+
+"""Job models."""
+
 import uuid
-from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, String, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.base.model import BaseModel, TimestampMixin, utcnow
 from app.database import Base
+from app.core.base.model import BaseModel
 
 
-class UserProfile(Base, BaseModel):
-    """User profile — extended user information per company."""
+class JobPosting(Base, BaseModel):
+    """Job posting model."""
 
-    __tablename__ = "user_profiles"
+    __tablename__ = "job_postings"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    # ========================================================================
+    # Basic information
+    # ========================================================================
+
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        index=True,
     )
-    company_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
-    role: Mapped[str] = mapped_column(String(50), nullable=False, default="user")
-    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    job_title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    # Relationships
-    user = relationship("User", back_populates="profile")
-    company = relationship("Company", back_populates="user_profiles")
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
-    @property
-    def full_name(self) -> str:
-        """Return full name of the user."""
-        parts = [self.first_name or "", self.last_name or ""]
-        return " ".join(p for p in parts if p).strip() or "Unknown"
+    location: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="draft",
+    )
+
+    # ========================================================================
+    # Company
+    # ========================================================================
+
+    company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey(
+            "companies.id",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+        index=True,
+    )
+
+    company = relationship(
+        "Company",
+        lazy="select",
+    )
+
+    # ========================================================================
+    # Creator
+    # ========================================================================
+
+    created_by_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey(
+            "users.id",
+            ondelete="RESTRICT",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    created_by = relationship(
+        "User",
+        lazy="select",
+    )
+
+    # ========================================================================
+    # Representation
+    # ========================================================================
 
     def __repr__(self) -> str:
-        return f"<UserProfile user_id={self.user_id} role={self.role}>"
+        return (
+            f"<JobPosting "
+            f"title={self.title!r} "
+            f"id={self.id}>"
+        )
