@@ -8,69 +8,57 @@
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Upload and parse candidate resumes automatically</p>
   </div>
 
-  <!-- Upload Area -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 mb-6 text-center hover:border-primary-400 dark:hover:border-primary-600 transition-colors cursor-pointer">
+  <!-- Upload Area (keeps same look; adds HTMX form) -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 p-12 mb-6 text-center hover:border-primary-400 dark:hover:border-primary-600 transition-colors">
     <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
     </svg>
     <p class="text-lg font-medium text-gray-900 dark:text-white mb-1">Drag and drop resumes here</p>
     <p class="text-sm text-gray-500 dark:text-gray-400">or <span class="text-primary-600 hover:text-primary-700 dark:text-primary-400">click to browse</span></p>
+
+    <form id="resume-upload-form" hx-post="/resume-parser/parse" hx-encoding="multipart/form-data" hx-target="#resumes-list" hx-swap="afterbegin" class="mt-4 inline-block">
+      <input type="file" name="file" accept=".pdf,.doc,.docx" required class="hidden" id="resume-file-input"/>
+      <button type="button" onclick="document.getElementById('resume-file-input').click()" class="px-4 py-2 bg-primary-600 text-white rounded-md">Upload Resume</button>
+    </form>
+
     <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Supported formats: PDF, DOCX, DOC (Max 5MB)</p>
   </div>
 
-  <!-- Parsed Resumes -->
-  <div class="space-y-4">
+  <!-- Parsed Resumes container (HTMX will insert partial rows here) -->
+  <div class="space-y-4" id="resumes-list">
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recently Parsed</h3>
-    
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div class="flex items-start justify-between mb-4">
-        <div>
-          <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Ahmed Hassan</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">Senior Developer</p>
-        </div>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-          Parsed ✓
-        </span>
-      </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b border-gray-200 dark:border-gray-700">
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</p>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">ahmed@example.com</p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Phone</p>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">+20 123 456 7890</p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Experience</p>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">8 years</p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Skills Found</p>
-          <p class="text-sm font-medium text-gray-900 dark:text-white">12</p>
-        </div>
+    {% if resumes %}
+      {% for r in resumes %}
+        {% with resume = r %}
+          {% include "resume_parser/partials/resume_row.html" %}
+        {% endwith %}
+      {% endfor %}
+    {% else %}
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <p class="text-gray-500 dark:text-gray-400">No resumes parsed yet.</p>
       </div>
-
-      <div class="mt-4">
-        <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Top Skills</p>
-        <div class="flex flex-wrap gap-2">
-          <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full">Python</span>
-          <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full">Django</span>
-          <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full">PostgreSQL</span>
-          <span class="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full">Docker</span>
-        </div>
-      </div>
-
-      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-        <button class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-          Create Candidate
-        </button>
-        <button class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">
-          Review
-        </button>
-      </div>
-    </div>
+    {% endif %}
   </div>
 </div>
+
+<!-- HTMX + small client helper (place before </body>) -->
+<script src="https://unpkg.com/htmx.org@1.10.1"></script>
+<script>
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'resume-file-input') {
+      const form = document.getElementById('resume-upload-form');
+      const file = e.target.files[0];
+      // client-side size guard (5MB)
+      if (file && file.size > 5 * 1024 * 1024) {
+        alert('File too large (max 5MB).');
+        e.target.value = '';
+        return;
+      }
+      form.submit();
+      // clear input so same filename can be uploaded again later
+      e.target.value = '';
+    }
+  });
+</script>
 {% endblock %}

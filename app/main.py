@@ -7,6 +7,7 @@ Modular Monolith architecture: one application, 17 internal modules.
 import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
+import types
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,6 +101,16 @@ templates = Jinja2Templates(
 # "unhashable type: 'dict'" errors coming from Jinja2's internal cache.
 env = getattr(templates, "env", None) or getattr(templates, "environment", None)
 if env is not None:
+    # Emergency: disable Jinja2 template caching to avoid crashes when the
+    # cache key construction includes unhashable values. This is a safe
+    # short-term mitigation; it can be removed/replaced once we sanitize
+    # env.globals or ensure only hashable values are used in cache keys.
+    try:
+        env.cache = {}
+    except Exception:
+        # If env doesn't support cache assignment for some reason, ignore.
+        pass
+
     _orig_get_template = env.get_template
 
     class _HashableWrapper:
@@ -149,15 +160,108 @@ if env is not None:
                 safe[k] = _HashableWrapper(v)
         return safe
 
-    def _safe_get_template(name, globals=None):
-        # Avoid passing per-call globals to Jinja2's get_template to prevent
-        # unhashable objects from entering the template cache key. Starlette's
-        # TemplateResponse will still work because we only control template
-        # lookup here; template rendering receives the context later.
-        return _orig_get_template(name)
+    # Sanitize env.globals (wrap any unhashable values so they don't break
+    # Jinja2's cache key construction). This helps when TemplateResponse or
+    # application code sets complex globals at environment level.
+    try:
+        for _k, _v in list(env.globals.items()):
+            try:
+                hash(_v)
+            except Exception:
+                env.globals[_k] = _HashableWrapper(_v)
+    except Exception:
+        # Protect startup from any unexpected env shape.
+        print("[warn] Failed to sanitize env.globals — continuing with cache disabled")
 
-    # Patch the environment's get_template in place.
-    env.get_template = _safe_get_template
+    def _safe_get_template(*args, **kwargs):
+        """
+        Safely call the original get_template while ensuring any per-call
+        globals are converted into hashable-friendly values. This wrapper is
+        defensive about being installed as either a bound method or plain
+        function: it inspects arguments to find the template name and globals
+        regardless of how Python passes them. It also logs diagnostic info
+        when the call shape is unexpected (e.g. no string template name) so
+        we can identify mis-bound or mis-invoked calls.
+        """
+        # If called as a bound method, the first arg will be `self` (env).
+        # Drop it so positional parsing below works the same for both bound
+        # and unbound calls.
+        args_list = list(args)
+        if args_list and args_list[0] is env:
+            args_list = args_list[1:]
+
+        # Identify template name and globals argument robustly.
+        name = None
+        globals_arg = None
+
+        if "name" in kwargs:
+            name = kwargs.get("name")
+            globals_arg = kwargs.get("globals", None)
+        else:
+            if len(args_list) >= 1:
+                name = args_list[0]
+            if len(args_list) >= 2:
+                globals_arg = args_list[1]
+            # kwargs may still override
+            globals_arg = kwargs.get("globals", globals_arg)
+
+        # If name is not a string, try to find a string value in args/kwargs
+        if not isinstance(name, str):
+            # Attempt to locate a plausible template name in args/kwargs
+            found = None
+            for a in args_list:
+                if isinstance(a, str):
+                    found = a
+                    break
+            if not found:
+                for v in kwargs.values():
+                    if isinstance(v, str):
+                        found = v
+                        break
+            if found:
+                name = found
+            else:
+                # Diagnostic: log the call shape so we can trace the caller.
+                try:
+                    arg_summary = [f"{type(a).__name__}:{repr(a)[:200]}" for a in args_list]
+                    kw_summary = {k: type(v).__name__ for k, v in kwargs.items()}
+                except Exception:
+                    arg_summary = [str(type(a)) for a in args_list]
+                    kw_summary = {k: str(type(v)) for k, v in kwargs.items()}
+                print(f"[diag] get_template called with non-str name; args={arg_summary} kwargs={kw_summary}")
+                # Fail fast with a controlled HTTPException to avoid passing a
+                # dict into Jinja2's template loader (which causes the cache
+                # TypeError). This will be caught by our HTTP exception
+                # handler and render an error page instead of crashing the
+                # worker with an internal traceback.
+                raise HTTPException(status_code=500, detail="Template invocation error")
+
+        try:
+            if globals_arg:
+                safe_globals = _sanitize_globals(globals_arg)
+                return _orig_get_template(name, globals=safe_globals)
+            return _orig_get_template(name)
+        except TypeError as e:
+            # Log and attempt a best-effort fallback
+            print(f"[warn] Jinja2 get_template TypeError for {name}: {e}")
+            try:
+                return _orig_get_template(name)
+            except Exception as e2:
+                print(f"[error] Jinja2 get_template failed after fallback for {name}: {e2}")
+                # As a last resort, raise HTTPException so upper handlers can
+                # render an error page without exposing the internal traceback.
+                raise HTTPException(status_code=500, detail="Template rendering error")
+        except Exception as e:
+            print(f"[error] Unexpected error in _safe_get_template for {name}: {e}")
+            raise HTTPException(status_code=500, detail="Template system error")
+
+    # Bind the wrapper to the env instance so it behaves exactly like a
+    # method (ensures 'self' semantics are correct).
+    try:
+        env.get_template = types.MethodType(_safe_get_template, env)
+    except Exception:
+        # Fallback: assign function directly
+        env.get_template = _safe_get_template
 
 
 @app.exception_handler(AppException)

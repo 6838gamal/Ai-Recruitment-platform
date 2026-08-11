@@ -1,0 +1,32 @@
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-4 resume-row" id="resume-{{ resume.id }}">
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ resume.first_name or 'Candidate' }} {{ resume.last_name or '' }}</h4>
+      <p class="text-sm text-gray-600 dark:text-gray-400">{{ resume.title or '' }}</p>
+    </div>
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+      Parsed ✓
+    </span>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b border-gray-200 dark:border-gray-700">
+    <div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</p>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">{{ resume.email or '—' }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Phone</p>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">{{ resume.phone or '—' }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Location</p>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">{{ resume.location or '—' }}</p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Preview</p>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">
+        <a href="/resume-parser/{{ resume.id }}" class="text-primary-600 hover:text-primary-700">View</a>
+      </p>
+    </div>
+  </div>
+</div>

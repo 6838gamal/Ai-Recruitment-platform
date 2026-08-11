@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from app.utils.enhanced_templates import EnhancedJinja2Templates
 from app.dependencies import get_current_user_profile
 
 router = APIRouter(prefix="/crm", tags=["CRM"])
-templates = Jinja2Templates(directory="app/templates")
+templates = EnhancedJinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def get_crm(request: Request, current_user = Depends(get_current_user_profile)):
