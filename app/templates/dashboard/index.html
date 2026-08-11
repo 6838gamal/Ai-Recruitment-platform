@@ -1,42 +1,176 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - منصة التوظيف الذكية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <nav class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-blue-600">منصة التوظيف الذكية</h1>
-                <a href="/auth/logout" class="text-red-600 hover:text-red-700">تسجيل الخروج</a>
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - منصة التوظيف الذكية{% endblock %}
+
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">مرحباً بك 👋</h2>
+        <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-2">إليك نظرة عامة على حالة نظام التوظيف الخاص بك</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8">
+        <!-- Jobs Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">الوظائف</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ jobs_count|default(0) }}</p>
+                    <span class="text-xs text-green-600 dark:text-green-400 mt-1 inline-block">↑ زيادة 12%</span>
+                </div>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-.5a2 2 0 00-2 2v2m9 0a2 2 0 00-2-2h-.5a2 2 0 00-2 2m9 0H7m9 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V6"/>
+                    </svg>
+                </div>
             </div>
-        </nav>
-        
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8">مرحباً بك في لوحة التحكم</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الوظائف</h3>
-                    <p class="text-3xl font-bold text-blue-600">0</p>
+        </div>
+
+        <!-- Candidates Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">المرشحون</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ candidates_count|default(0) }}</p>
+                    <span class="text-xs text-green-600 dark:text-green-400 mt-1 inline-block">↑ 24 جديد</span>
                 </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المرشحون</h3>
-                    <p class="text-3xl font-bold text-green-600">0</p>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.656V7a1 1 0 00-1 1v1h1a1 1 0 001-1V7a1 1 0 00-1-1v3z"/>
+                    </svg>
                 </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المقابلات</h3>
-                    <p class="text-3xl font-bold text-yellow-600">0</p>
+            </div>
+        </div>
+
+        <!-- Interviews Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">المقابلات</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ interviews_count|default(0) }}</p>
+                    <span class="text-xs text-orange-600 dark:text-orange-400 mt-1 inline-block">8 قيد الانتظار</span>
                 </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الشركات</h3>
-                    <p class="text-3xl font-bold text-purple-600">0</p>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Companies Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium mb-2">الشركات</p>
+                    <p class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{{ companies_count|default(0) }}</p>
+                    <span class="text-xs text-purple-600 dark:text-purple-400 mt-1 inline-block">شركة نشطة</span>
+                </div>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5.5m0 0H9.5m0 0H4m5.5 0v-3m0 3H9.5m0-3v3"/>
+                    </svg>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <a href="/jobs" class="flex items-center gap-3 p-4 sm:p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30 rounded-lg hover:shadow-md transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">أضف وظيفة</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">وظيفة جديدة</p>
+            </div>
+        </a>
+
+        <a href="/candidates" class="flex items-center gap-3 p-4 sm:p-6 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg hover:shadow-md transition-all hover:bg-green-100 dark:hover:bg-green-900/20">
+            <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">مرشح جديد</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">إضافة مرشح</p>
+            </div>
+        </a>
+
+        <a href="/interviews" class="flex items-center gap-3 p-4 sm:p-6 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30 rounded-lg hover:shadow-md transition-all hover:bg-orange-100 dark:hover:bg-orange-900/20">
+            <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">مقابلة جديدة</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">جدولة مقابلة</p>
+            </div>
+        </a>
+
+        <a href="/reports" class="flex items-center gap-3 p-4 sm:p-6 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30 rounded-lg hover:shadow-md transition-all hover:bg-purple-100 dark:hover:bg-purple-900/20">
+            <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">التقارير</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">عرض الإحصائيات</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">النشاط الأخير</h3>
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
+                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">تم إضافة وظيفة جديدة</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">مهندس البرمجيات</p>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">منذ ساعة</p>
+            </div>
+            <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">تم تقديم طلب جديد</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">من أحمد محمد</p>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">منذ ساعتين</p>
+            </div>
+            <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
+                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">مقابلة مجدولة</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">سارة علي - غداً في 2:00 PM</p>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">منذ يوم</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,74 +1,35 @@
 {% extends "base.html" %}
-{% block title %}ATS Pipeline — AI Recruitment Platform{% endblock %}
-{% block page_title %}ATS Pipeline{% endblock %}
+
+{% block title %}
+سير العمل - منصة التوظيف الذكية
+{% endblock %}
+
+{% block page_title %}سير العمل{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Application Tracking</h2>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Kanban board view of all applications</p>
-  </div>
-
-  <!-- Kanban Board -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto pb-6">
-    <!-- Applied -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 min-h-96">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
-        Applied (5)
-      </h3>
-      <div class="space-y-3">
-        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">John Smith</p>
-          <p class="text-xs text-gray-600 dark:text-gray-400">Senior Developer</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Applied 2 days ago</p>
+<div class="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">نظام إدارة سير العمل</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">إدارة مراحل التقديم والمرشحين</p>
         </div>
-      </div>
+        <a href="#" class="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors text-sm sm:text-base">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span class="hidden sm:inline">إضافة مرحلة جديدة</span>
+            <span class="sm:hidden">إضافة</span>
+        </a>
     </div>
 
-    <!-- Screening -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 min-h-96">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
-        Screening (3)
-      </h3>
-      <div class="space-y-3">
-        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">Sarah Johnson</p>
-          <p class="text-xs text-gray-600 dark:text-gray-400">Product Manager</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Screening in progress</p>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 0L5 3m4 4l4-4M15 7v10m0 0l4-4m-4 4l-4 4"/>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">نظام إدارة سير العمل - قريباً</p>
+            <p class="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">جاري تطوير هذه الميزة</p>
         </div>
-      </div>
     </div>
-
-    <!-- Interview -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 min-h-96">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span class="w-3 h-3 bg-purple-500 rounded-full"></span>
-        Interview (2)
-      </h3>
-      <div class="space-y-3">
-        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">Mike Davis</p>
-          <p class="text-xs text-gray-600 dark:text-gray-400">UX Designer</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Interview scheduled</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Offer -->
-    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 min-h-96">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-        Offer (1)
-      </h3>
-      <div class="space-y-3">
-        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">Emma Wilson</p>
-          <p class="text-xs text-gray-600 dark:text-gray-400">Sales Manager</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Offer pending</p>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}
