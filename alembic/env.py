@@ -25,6 +25,8 @@ from app.modules.users import models as users_models  # noqa: F401, E402
 from app.modules.jobs import models as jobs_models  # noqa: F401, E402
 from app.modules.candidates import models as candidates_models  # noqa: F401, E402
 from app.modules.ats import models as ats_models  # noqa: F401, E402
+
+from app.modules.resume_parser import models as resume_parser_models  # noqa: F401, E402
 from app.modules.interviews import models as interviews_models  # noqa: F401, E402
 from app.modules.notifications import models as notifications_models  # noqa: F401, E402
 from app.modules.ai_matching import models as ai_models  # noqa: F401, E402
