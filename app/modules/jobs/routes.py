@@ -25,10 +25,13 @@ def _job_template(preferred: str, fallback: str) -> str:
 @router.get("/", response_class=HTMLResponse)
 async def list_jobs(request: Request, current_user = Depends(get_current_user_profile)):
     """Render the jobs list page."""
+    # Provide a default jobs list (empty) so templates referencing `jobs` don't fail
+    # If/when a JobService or repository is available, replace this with real data.
+    jobs = []
     return templates.TemplateResponse(
         request,
         "jobs/list.html",
-        {"request": request, "current_user": current_user}
+        {"request": request, "current_user": current_user, "jobs": jobs}
     )
 
 
