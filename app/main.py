@@ -150,11 +150,24 @@ if env is not None:
         return safe
 
     def _safe_get_template(name, globals=None):
-        # Avoid passing per-call globals to Jinja2's get_template to prevent
-        # unhashable objects from entering the template cache key. Starlette's
-        # TemplateResponse will still work because we only control template
-        # lookup here; template rendering receives the context later.
-        return _orig_get_template(name)
+        """
+        Safely call the original get_template while ensuring any per-call
+        globals are converted into hashable-friendly values. We try the
+        sanitized path first; if Jinja2 still raises a TypeError (cache key
+        building with nested unhashable data), fall back to calling the
+        original without per-call globals which avoids inserting them into
+        the cache key.
+        """
+        try:
+            if globals:
+                safe_globals = _sanitize_globals(globals)
+                return _orig_get_template(name, globals=safe_globals)
+            return _orig_get_template(name)
+        except TypeError:
+            # Best-effort fallback: call without globals to avoid unhashable
+            # objects appearing in the cache key. This may be slightly less
+            # efficient for caching but prevents the server error.
+            return _orig_get_template(name)
 
     # Patch the environment's get_template in place.
     env.get_template = _safe_get_template
