@@ -1,60 +1,51 @@
 {% extends "base.html" %}
-{% block title %}Reports — AI Recruitment Platform{% endblock %}
-{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block title %}
+التقارير - منصة التوظيف الذكية
+{% endblock %}
+
+{% block page_title %}التقارير{% endblock %}
+
 {% block content %}
-<div class="p-6">
-  <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h2>
-    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comprehensive recruitment metrics and insights</p>
-  </div>
+<div class="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">التقارير والإحصائيات</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">تحليلات شاملة لعملياتك التوظيفية</p>
+        </div>
+        <a href="#" class="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors text-sm sm:text-base">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span class="hidden sm:inline">تقرير جديد</span>
+            <span class="sm:hidden">إضافة</span>
+        </a>
+    </div>
 
-  <!-- Date Range Selector -->
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-    <div class="flex gap-4">
-      <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">Last 7 Days</button>
-      <button class="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">Last 30 Days</button>
-      <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors">Last 90 Days</button>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">إجمالي الطلبات</p>
+            <p class="text-3xl font-bold text-primary-600">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">معدل القبول</p>
+            <p class="text-3xl font-bold text-green-600">0%</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">متوسط الوقت</p>
+            <p class="text-3xl font-bold text-orange-600">0د</p>
+        </div>
     </div>
-  </div>
 
-  <!-- Key Metrics -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total Applications</p>
-      <p class="text-3xl font-bold text-gray-900 dark:text-white">284</p>
-      <p class="text-xs text-green-600 dark:text-green-400 mt-2">↑ 12% from last month</p>
+        <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">التقارير - قريباً</p>
+            <p class="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-1">جاري تطوير نظام التقارير المتقدم</p>
+        </div>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Avg. Time to Hire</p>
-      <p class="text-3xl font-bold text-gray-900 dark:text-white">18 days</p>
-      <p class="text-xs text-red-600 dark:text-red-400 mt-2">↓ 3 days improvement</p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Offer Acceptance Rate</p>
-      <p class="text-3xl font-bold text-gray-900 dark:text-white">78%</p>
-      <p class="text-xs text-green-600 dark:text-green-400 mt-2">↑ 5% from last month</p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Hires This Month</p>
-      <p class="text-3xl font-bold text-gray-900 dark:text-white">12</p>
-      <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">Target: 15</p>
-    </div>
-  </div>
-
-  <!-- Charts Placeholder -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Applications Over Time</h3>
-      <div class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
-        <p>Chart placeholder - Chart.js or similar</p>
-      </div>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Pipeline Conversion</h3>
-      <div class="h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400">
-        <p>Chart placeholder - Chart.js or similar</p>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}
