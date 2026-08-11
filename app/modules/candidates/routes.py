@@ -1,4 +1,4 @@
-```python
+
 """Candidates module routes."""
 
 from fastapi import APIRouter, Depends, Request
@@ -96,4 +96,4 @@ async def edit_candidate(
             "candidate_id": candidate_id,
         },
     )
-```
+
