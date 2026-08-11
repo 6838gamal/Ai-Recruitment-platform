@@ -5,7 +5,6 @@ Handles common context variables automatically for all templates.
 
 from typing import Dict, Any, Optional
 from fastapi.templating import Jinja2Templates
-from starlette.responses import TemplateResponse
 from starlette.requests import Request
 
 
@@ -21,7 +20,7 @@ class EnhancedJinja2Templates(Jinja2Templates):
     and normalizes them before delegating to the parent implementation.
     """
 
-    def TemplateResponse(self, *args, status_code: int = 200, headers: Optional[Dict[str, str]] = None, media_type: Optional[str] = None, background=None, **kwargs) -> TemplateResponse:
+    def TemplateResponse(self, *args, status_code: int = 200, headers: Optional[Dict[str, str]] = None, media_type: Optional[str] = None, background=None, **kwargs) -> Any:
         """
         Backwards/forwards compatible TemplateResponse wrapper.
 
