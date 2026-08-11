@@ -1,4 +1,4 @@
-```python
+
 """Job models."""
 
 import uuid
@@ -56,4 +56,4 @@ class JobPosting(Base, BaseModel):
 
     def __repr__(self) -> str:
         return f"<JobPosting title={self.title!r} id={self.id}>"
-```
+
