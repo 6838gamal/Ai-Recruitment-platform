@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from jinja2 import TemplateNotFound
-from typing import Optional
 from urllib.parse import quote_plus
 import re
 
@@ -19,9 +18,7 @@ templates = EnhancedJinja2Templates(directory="app/templates")
 
 
 def _slugify(value: str) -> str:
-    """Simple slugify: lowercase, keep letters/numbers, replace spaces with hyphens."""
     value = (value or "").strip().lower()
-    # replace non-alphanum with hyphen
     value = re.sub(r"[^a-z0-9]+", "-", value)
     value = re.sub(r"-+", "-", value)
     return value.strip("-")
@@ -37,7 +34,7 @@ async def list_companies(request: Request, db: Session = Depends(get_db), curren
         return templates.TemplateResponse(
             request,
             "companies/list.html",
-            {"request": request, "companies": companies, "fields": fields, "current_user": current_user},
+            {"request": request, "companies": companies, "fields": fields, "current_user": current_user, "attribute": getattr},
         )
     except TemplateNotFound:
         return {"message": "Companies list endpoint", "count": len(companies)}
@@ -49,7 +46,7 @@ async def create_company_form(request: Request, current_user=Depends(get_current
     return templates.TemplateResponse(
         request,
         "companies/form.html",
-        {"request": request, "action": "create", "fields": fields, "current_user": current_user},
+        {"request": request, "action": "create", "fields": fields, "current_user": current_user, "attribute": getattr},
     )
 
 
@@ -75,17 +72,15 @@ async def create_company_submit(request: Request, db: Session = Depends(get_db),
     repo = CompanyRepository(db)
     try:
         company = repo.create(data)
-        # redirect to company detail
         return RedirectResponse(url=f"/companies/{quote_plus(company.slug)}", status_code=302)
     except IntegrityError as exc:
-        # likely slug unique constraint
         db.rollback()
         fields = get_model_fields_sqlalchemy(Company)
         error = "Company with this slug already exists." if "slug" in str(exc).lower() else str(exc)
         return templates.TemplateResponse(
             request,
             "companies/form.html",
-            {"request": request, "action": "create", "fields": fields, "error": error, "form_values": form},
+            {"request": request, "action": "create", "fields": fields, "error": error, "form_values": form, "current_user": current_user, "attribute": getattr},
         )
 
 
@@ -99,7 +94,7 @@ async def company_detail(request: Request, slug: str, db: Session = Depends(get_
     return templates.TemplateResponse(
         request,
         "companies/detail.html",
-        {"request": request, "company": company, "fields": fields, "current_user": current_user},
+        {"request": request, "company": company, "fields": fields, "current_user": current_user, "attribute": getattr},
     )
 
 
@@ -113,7 +108,7 @@ async def edit_company_form(request: Request, slug: str, db: Session = Depends(g
     return templates.TemplateResponse(
         request,
         "companies/form.html",
-        {"request": request, "action": "edit", "company": company, "fields": fields, "current_user": current_user},
+        {"request": request, "action": "edit", "company": company, "fields": fields, "current_user": current_user, "attribute": getattr},
     )
 
 
@@ -151,5 +146,15 @@ async def edit_company_submit(request: Request, slug: str, db: Session = Depends
         return templates.TemplateResponse(
             request,
             "companies/form.html",
-            {"request": request, "action": "edit", "company": company, "fields": fields, "error": error, "form_values": form},
+            {"request": request, "action": "edit", "company": company, "fields": fields, "error": error, "form_values": form, "current_user": current_user, "attribute": getattr},
         )
+
+
+@router.post("/{slug}/delete")
+async def delete_company(request: Request, slug: str, db: Session = Depends(get_db), current_user=Depends(get_current_user_profile)):
+    repo = CompanyRepository(db)
+    company = repo.get_by_slug(slug)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    repo.soft_delete(company)
+    return RedirectResponse(url="/companies/", status_code=302)
