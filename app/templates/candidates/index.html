@@ -1,3 +1,4 @@
+```html
 {% extends "base.html" %}
 
 {% block title %}المرشحون - منصة التوظيف الذكية{% endblock %}
@@ -6,9 +7,144 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">قائمة المرشحين</h2>
-        <p class="text-gray-500 dark:text-gray-400">لا يوجد مرشحون حالياً</p>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                قائمة المرشحين
+            </h2>
+
+            <p class="text-gray-500 dark:text-gray-400 mt-1">
+                إدارة ومتابعة المرشحين في عملية التوظيف
+            </p>
+        </div>
+
+        <a
+            href="{{ request.url_for('candidates:create') }}"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+        >
+            <span class="ml-2">+</span>
+            إضافة مرشح
+        </a>
     </div>
+
+
+    <!-- Candidates -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+
+        {% if candidates %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-right">
+
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                الاسم
+                            </th>
+
+                            <th class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                البريد الإلكتروني
+                            </th>
+
+                            <th class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                الهاتف
+                            </th>
+
+                            <th class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                الحالة
+                            </th>
+
+                            <th class="px-6 py-4 text-gray-700 dark:text-gray-200">
+                                الإجراءات
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
+                        {% for candidate in candidates %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                                {{ candidate.first_name }} {{ candidate.last_name }}
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                {{ candidate.email or '-' }}
+                            </td>
+
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                {{ candidate.phone or '-' }}
+                            </td>
+
+                            <td class="px-6 py-4">
+                                {% if candidate.status %}
+                                    <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                                        {{ candidate.status }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <div class="flex gap-3">
+
+                                    <a
+                                        href="{{ request.url_for('candidates:view', candidate_id=candidate.id) }}"
+                                        class="text-blue-600 hover:text-blue-800"
+                                    >
+                                        عرض
+                                    </a>
+
+                                    <a
+                                        href="{{ request.url_for('candidates:edit', candidate_id=candidate.id) }}"
+                                        class="text-green-600 hover:text-green-800"
+                                    >
+                                        تعديل
+                                    </a>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <!-- Empty State -->
+            <div class="text-center py-16 px-6">
+
+                <div class="text-5xl mb-4">
+                    👤
+                </div>
+
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    لا يوجد مرشحون حالياً
+                </h3>
+
+                <p class="text-gray-500 dark:text-gray-400 mb-6">
+                    ابدأ بإضافة أول مرشح إلى النظام.
+                </p>
+
+                <a
+                    href="{{ request.url_for('candidates:create') }}"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                    إضافة أول مرشح
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
 {% endblock %}
+```
