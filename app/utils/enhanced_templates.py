@@ -29,6 +29,16 @@ class EnhancedJinja2Templates(Jinja2Templates):
           - templates.TemplateResponse("name.html", {...})
         Ensures 'request' is present in context and injects current_user.
         """
+        # Ensure expected globals/filters exist on the environment before rendering
+        # Some templates rely on `attribute` global and custom filters.
+        try:
+            self.env.globals.setdefault('attribute', getattr)
+            self.env.filters.setdefault('urljoin', self._urljoin_filter)
+            self.env.filters.setdefault('safe_url', self._safe_url_filter)
+        except Exception:
+            # In case environment isn't fully initialized yet, ignore and proceed.
+            pass
+
         request = None
         name = None
         context = None
@@ -99,7 +109,7 @@ class EnhancedJinja2Templates(Jinja2Templates):
         """Get template with environment configuration."""
         template = self.get_template(name)
 
-        # Add custom filters
+        # Add custom filters (ensure available even if TemplateResponse didn't run the try above)
         self.env.filters.setdefault('urljoin', self._urljoin_filter)
         self.env.filters.setdefault('safe_url', self._safe_url_filter)
 
