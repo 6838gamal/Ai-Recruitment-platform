@@ -79,7 +79,14 @@ async def parse_resume(request: Request, file: UploadFile = File(...), current_u
         "summary": None,
     }
 
-    # Do not attempt to save the file or write to DB here — keep this a safe preview.
+    # If the request is from HTMX, return a partial HTML fragment (a single resume card)
+    if request.headers.get("HX-Request") == "true":
+        return templates.TemplateResponse(
+            "resume_parser/partials/resume_row.html",
+            {"request": request, "resume": parsed_resume},
+        )
+
+    # Default: render full detail view
     return templates.TemplateResponse(
         "resume_parser/view.html",
         {"request": request, "current_user": current_user, "resume": parsed_resume},
