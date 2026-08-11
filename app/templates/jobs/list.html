@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "partials/dynamic_table.html" as table %}
 
 {% block title %}الوظائف - منصة التوظيف الذكية{% endblock %}
 
@@ -6,9 +7,28 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">قائمة الوظائف</h2>
-        <p class="text-gray-500 dark:text-gray-400">لا توجد وظائف حالياً</p>
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">قائمة الوظائف</h2>
+        <a href="/jobs/create" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            إضافة وظيفة جديدة
+        </a>
     </div>
+    
+    {{ table.dynamic_table(
+        items=jobs if jobs else [],
+        fields=[
+            {'name': 'title', 'type': 'str'},
+            {'name': 'company', 'type': 'str'},
+            {'name': 'status', 'type': 'str'}
+        ],
+        item_url_prefix='/jobs/',
+        empty_message='لا توجد وظائف حالياً',
+        invite_url='/jobs/create',
+        can_edit=True,
+        can_delete=True
+    ) }}
 </div>
 {% endblock %}
