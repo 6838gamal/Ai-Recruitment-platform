@@ -38,7 +38,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Display candidates for the current company."""
 
-
+```
 company_id = current_user.company_id
 
 service = CandidateService(db)
@@ -56,7 +56,7 @@ return templates.TemplateResponse(
         "candidates": candidates,
     },
 )
-
+```
 
 # ============================================================
 
@@ -75,7 +75,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Display create candidate form."""
 
-
+```
 return templates.TemplateResponse(
     request,
     "candidates/create.html",
@@ -84,6 +84,7 @@ return templates.TemplateResponse(
         "current_user": current_user,
     },
 )
+```
 
 # ============================================================
 
@@ -103,7 +104,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Create a candidate and redirect to candidates list."""
 
-
+```
 form = await request.form()
 
 first_name = str(form.get("first_name", "")).strip()
@@ -156,7 +157,7 @@ return RedirectResponse(
     ),
     status_code=303,
 )
-
+```
 
 # ============================================================
 
@@ -177,7 +178,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Display a single candidate."""
 
-
+```
 company_id = current_user.company_id
 
 service = CandidateService(db)
@@ -202,7 +203,7 @@ return templates.TemplateResponse(
         "candidate": candidate,
     },
 )
-
+```
 
 # ============================================================
 
@@ -223,7 +224,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Display edit candidate form."""
 
-
+```
 company_id = current_user.company_id
 
 service = CandidateService(db)
@@ -248,7 +249,7 @@ return templates.TemplateResponse(
         "candidate": candidate,
     },
 )
-
+```
 
 # ============================================================
 
@@ -269,7 +270,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Update an existing candidate."""
 
-
+```
 form = await request.form()
 
 first_name = str(form.get("first_name", "")).strip()
@@ -325,6 +326,7 @@ return RedirectResponse(
     ),
     status_code=303,
 )
+```
 
 # ============================================================
 
@@ -345,7 +347,7 @@ current_user=Depends(get_current_user_profile),
 ):
 """Delete a candidate."""
 
-
+```
 company_id = current_user.company_id
 
 service = CandidateService(db)
@@ -359,3 +361,4 @@ return RedirectResponse(
     url=request.url_for("candidates:list"),
     status_code=303,
 )
+```
