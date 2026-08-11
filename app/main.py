@@ -451,6 +451,7 @@ from app.modules.companies import models as _companies_models
 from app.modules.jobs import models as _jobs_models
 from app.modules.candidates import models as _candidates_models
 from app.modules.ats import models as _ats_models
+from app.modules.resume_parser import models as _resume_parser_models
 from app.modules.interviews import models as _interviews_models
 from app.modules.billing import models as _billing_models
 from app.modules.crm import models as _crm_models
