@@ -112,6 +112,7 @@ async def create_candidate_submit(
     status = str(form.get("status", "new")).strip() or "new"
     source = str(form.get("source", "")).strip() or None
 
+    # Basic validation
     if not first_name or not last_name or not email:
         return templates.TemplateResponse(
             request,
@@ -142,11 +143,9 @@ async def create_candidate_submit(
         source=source,
     )
 
+    # After successful creation, go directly to candidates table
     return RedirectResponse(
-        url=request.url_for(
-            "candidates:view",
-            candidate_id=str(candidate.id),
-        ),
+        url=request.url_for("candidates:list"),
         status_code=303,
     )
 
@@ -268,13 +267,17 @@ async def edit_candidate_submit(
     status = str(form.get("status", "new")).strip() or "new"
     source = str(form.get("source", "")).strip() or None
 
+    # Basic validation
     if not first_name or not last_name or not email:
-        return RedirectResponse(
-            url=request.url_for(
-                "candidates:edit_form",
-                candidate_id=str(candidate_id),
-            ),
-            status_code=303,
+        return templates.TemplateResponse(
+            request,
+            "candidates/edit.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "First name, last name and email are required.",
+            },
+            status_code=400,
         )
 
     company_id = current_user.company_id
@@ -302,11 +305,9 @@ async def edit_candidate_submit(
             status_code=303,
         )
 
+    # After successful update, go directly to candidates table
     return RedirectResponse(
-        url=request.url_for(
-            "candidates:view",
-            candidate_id=str(candidate.id),
-        ),
+        url=request.url_for("candidates:list"),
         status_code=303,
     )
 
@@ -337,6 +338,7 @@ async def delete_candidate(
         company_id=company_id,
     )
 
+    # After deletion, return to candidates table
     return RedirectResponse(
         url=request.url_for("candidates:list"),
         status_code=303,
