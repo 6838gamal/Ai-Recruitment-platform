@@ -1,91 +1,47 @@
-
 """Users module SQLAlchemy models."""
-
+import uuid
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Integer, String
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, String, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.base.model import BaseModel, TimestampMixin
+from app.core.base.model import BaseModel, TimestampMixin, utcnow
+from app.database import Base
 
 
-class User(BaseModel, TimestampMixin):
-    """
-    Application user.
+class UserProfile(Base, BaseModel):
+    """User profile — extended user information per company."""
 
-    Maps to the existing `users` database table.
+    __tablename__ = "user_profiles"
 
-    This model intentionally contains only fields that exist
-    in the current Alembic users table.
-    """
-
-    __tablename__ = "users"
-
-    # ========================================================================
-    # Authentication
-    # ========================================================================
-
-    email: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
-        unique=True,
-        index=True,
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-
-    hashed_password: Mapped[str] = mapped_column(
-        String(255),
-        nullable=False,
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True
     )
-
-    # ========================================================================
-    # Account status
-    # ========================================================================
-
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=True,
-        server_default="true",
+    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), nullable=True
     )
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default="user")
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    job_title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    is_verified: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        default=False,
-        server_default="false",
-    )
+    # Relationships
+    user = relationship("User", back_populates="profile")
+    company = relationship("Company", back_populates="user_profiles")
 
-    # ========================================================================
-    # Login information
-    # ========================================================================
+    @property
+    def full_name(self) -> str:
+        """Return full name of the user."""
+        parts = [self.first_name or "", self.last_name or ""]
+        return " ".join(p for p in parts if p).strip() or "Unknown"
 
-    last_login_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    # ========================================================================
-    # Security / account locking
-    # ========================================================================
-
-    failed_attempts: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-        default=0,
-        server_default="0",
-    )
-
-    locked_until: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    # ========================================================================
-    # Identity
-    # ========================================================================
-
-    # `id`, `created_at`, `updated_at`, and `deleted_at`
-    # are inherited from BaseModel / TimestampMixin.
+    def __repr__(self) -> str:
+        return f"<UserProfile user_id={self.user_id} role={self.role}>"
