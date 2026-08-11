@@ -1,218 +1,287 @@
-
 {% extends "base.html" %}
 
 {% block title %}Create Candidate — AI Recruitment Platform{% endblock %}
 
+{% block page_title %}Create Candidate{% endblock %}
+
 {% block content %}
+
 <div class="max-w-3xl mx-auto px-4 py-6">
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
+```
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
 
-        <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
             Create Candidate
         </h1>
 
-        <form
-            method="post"
-            action="{{ request.url_for('candidates:create_submit') }}"
-            class="space-y-5"
-        >
-
-            <!-- First / Last Name -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                <div>
-                    <label
-                        for="first_name"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                        First name
-                    </label>
-
-                    <input
-                        id="first_name"
-                        name="first_name"
-                        type="text"
-                        required
-                        class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                    >
-                </div>
-
-                <div>
-                    <label
-                        for="last_name"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                        Last name
-                    </label>
-
-                    <input
-                        id="last_name"
-                        name="last_name"
-                        type="text"
-                        required
-                        class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                    >
-                </div>
-
-            </div>
-
-
-            <!-- Email -->
-            <div>
-                <label
-                    for="email"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Email
-                </label>
-
-                <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-            </div>
-
-
-            <!-- Phone -->
-            <div>
-                <label
-                    for="phone"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Phone
-                </label>
-
-                <input
-                    id="phone"
-                    name="phone"
-                    type="text"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-            </div>
-
-
-            <!-- Location -->
-            <div>
-                <label
-                    for="location"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Location
-                </label>
-
-                <input
-                    id="location"
-                    name="location"
-                    type="text"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-            </div>
-
-
-            <!-- LinkedIn -->
-            <div>
-                <label
-                    for="linkedin_url"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    LinkedIn URL
-                </label>
-
-                <input
-                    id="linkedin_url"
-                    name="linkedin_url"
-                    type="url"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-            </div>
-
-
-            <!-- Portfolio -->
-            <div>
-                <label
-                    for="portfolio_url"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Portfolio URL
-                </label>
-
-                <input
-                    id="portfolio_url"
-                    name="portfolio_url"
-                    type="url"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-            </div>
-
-
-            <!-- Source -->
-            <div>
-                <label
-                    for="source"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Source
-                </label>
-
-                <select
-                    id="source"
-                    name="source"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                >
-                    <option value="">Select source</option>
-                    <option value="website">Website</option>
-                    <option value="linkedin">LinkedIn</option>
-                    <option value="referral">Referral</option>
-                    <option value="job_board">Job Board</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-
-
-            <!-- Summary -->
-            <div>
-                <label
-                    for="summary"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                    Summary
-                </label>
-
-                <textarea
-                    id="summary"
-                    name="summary"
-                    rows="4"
-                    class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
-                ></textarea>
-            </div>
-
-
-            <!-- Actions -->
-            <div class="flex items-center gap-2 pt-2">
-
-                <button
-                    type="submit"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                >
-                    Create
-                </button>
-
-                <a
-                    href="{{ request.url_for('candidates:list') }}"
-                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300"
-                >
-                    Cancel
-                </a>
-
-            </div>
-
-        </form>
-
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Add a new candidate to your recruitment database.
+        </p>
     </div>
+
+    <!--
+        IMPORTANT:
+        This form must submit to the POST route:
+        candidates:create_submit
+    -->
+    <form
+        method="post"
+        action="{{ request.url_for('candidates:create_submit') }}"
+        class="space-y-6"
+    >
+
+        <!-- First Name -->
+        <div>
+            <label
+                for="first_name"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                First name
+            </label>
+
+            <input
+                id="first_name"
+                name="first_name"
+                type="text"
+                required
+                autocomplete="given-name"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2
+                       focus:border-blue-500 focus:ring-blue-500"
+            >
+        </div>
+
+        <!-- Last Name -->
+        <div>
+            <label
+                for="last_name"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Last name
+            </label>
+
+            <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                required
+                autocomplete="family-name"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2
+                       focus:border-blue-500 focus:ring-blue-500"
+            >
+        </div>
+
+        <!-- Email -->
+        <div>
+            <label
+                for="email"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Email
+            </label>
+
+            <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="email"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2
+                       focus:border-blue-500 focus:ring-blue-500"
+            >
+        </div>
+
+        <!-- Phone -->
+        <div>
+            <label
+                for="phone"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Phone
+            </label>
+
+            <input
+                id="phone"
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+        </div>
+
+        <!-- Location -->
+        <div>
+            <label
+                for="location"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Location
+            </label>
+
+            <input
+                id="location"
+                name="location"
+                type="text"
+                autocomplete="address-level2"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+        </div>
+
+        <!-- LinkedIn -->
+        <div>
+            <label
+                for="linkedin_url"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                LinkedIn URL
+            </label>
+
+            <input
+                id="linkedin_url"
+                name="linkedin_url"
+                type="url"
+                placeholder="https://linkedin.com/in/..."
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+        </div>
+
+        <!-- Portfolio -->
+        <div>
+            <label
+                for="portfolio_url"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Portfolio URL
+            </label>
+
+            <input
+                id="portfolio_url"
+                name="portfolio_url"
+                type="url"
+                placeholder="https://..."
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+        </div>
+
+        <!-- Status -->
+        <div>
+            <label
+                for="status"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Status
+            </label>
+
+            <select
+                id="status"
+                name="status"
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+                <option value="new" selected>New</option>
+                <option value="screening">Screening</option>
+                <option value="interview">Interview</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+
+        <!-- Source -->
+        <div>
+            <label
+                for="source"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Source
+            </label>
+
+            <input
+                id="source"
+                name="source"
+                type="text"
+                placeholder="LinkedIn, Website, Referral..."
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            >
+        </div>
+
+        <!-- Summary -->
+        <div>
+            <label
+                for="summary"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+                Summary
+            </label>
+
+            <textarea
+                id="summary"
+                name="summary"
+                rows="5"
+                placeholder="Candidate experience, skills, notes..."
+                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700
+                       text-gray-900 dark:text-white
+                       px-3 py-2"
+            ></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-center gap-3 pt-4">
+
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center px-5 py-2.5
+                       bg-blue-600 hover:bg-blue-700
+                       text-white font-medium rounded-md
+                       transition-colors"
+            >
+                Create Candidate
+            </button>
+
+            <a
+                href="{{ request.url_for('candidates:list') }}"
+                class="inline-flex items-center justify-center px-5 py-2.5
+                       border border-gray-300 dark:border-gray-600
+                       text-gray-700 dark:text-gray-300
+                       rounded-md hover:bg-gray-50 dark:hover:bg-gray-700
+                       transition-colors"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+```
 
 </div>
 {% endblock %}
