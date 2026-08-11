@@ -5,7 +5,7 @@ Handles common context variables automatically for all templates.
 
 from typing import Dict, Any, Optional
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import TemplateResponse
+from starlette.responses import TemplateResponse
 from starlette.requests import Request
 
 
@@ -91,6 +91,6 @@ class EnhancedJinja2Templates(Jinja2Templates):
         if not value:
             return ""
         # Prevent XSS by validating URL starts with / or protocol
-        if value.startswith(('/','http://', 'https://', 'mailto:')):
+        if value.startswith(('/', 'http://', 'https://', 'mailto:')):
             return value
         return f"/{value}"
