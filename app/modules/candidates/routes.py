@@ -10,6 +10,6 @@ templates = Jinja2Templates(directory="app/templates")
 async def list_candidates(request: Request, current_user = Depends(get_current_user_profile)):
     return templates.TemplateResponse(
         request,
-        "candidates/index.html",
+        "candidates/list.html",
         {"request": request, "current_user": current_user}
     )
