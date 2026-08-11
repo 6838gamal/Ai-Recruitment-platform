@@ -34,11 +34,9 @@ templates = EnhancedJinja2Templates(
 )
 async def list_candidates(
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Display all candidates for the current company."""
-
     service = CandidateService(db)
 
     candidates = service.get_candidates(
@@ -69,8 +67,6 @@ async def create_candidate(
     request: Request,
     current_user=Depends(get_current_user_profile),
 ):
-    """Display create candidate form."""
-
     return templates.TemplateResponse(
         request,
         "candidates/create.html",
@@ -92,26 +88,28 @@ async def create_candidate(
 )
 async def create_candidate_submit(
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Create a candidate from submitted form data."""
-
     form = await request.form()
 
-    first_name = str(form.get("first_name", "")).strip()
-    last_name = str(form.get("last_name", "")).strip()
+    full_name = str(form.get("name", "")).strip()
     email = str(form.get("email", "")).strip()
 
-    if not first_name or not last_name or not email:
+    # Split full name into first/last name
+    name_parts = full_name.split(maxsplit=1)
+
+    first_name = name_parts[0] if name_parts else ""
+    last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+    if not first_name or not email:
         return templates.TemplateResponse(
             request,
             "candidates/create.html",
             {
                 "request": request,
                 "current_user": current_user,
-                "error": "First name, last name and email are required.",
-                "form": dict(form),
+                "error": "First name and email are required.",
             },
             status_code=400,
         )
@@ -123,14 +121,6 @@ async def create_candidate_submit(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        phone=str(form.get("phone", "")).strip() or None,
-        location=str(form.get("location", "")).strip() or None,
-        linkedin_url=str(form.get("linkedin_url", "")).strip() or None,
-        portfolio_url=str(form.get("portfolio_url", "")).strip() or None,
-        summary=str(form.get("summary", "")).strip() or None,
-        status=str(form.get("status", "new")).strip() or "new",
-        source=str(form.get("source", "")).strip() or None,
-        avatar_url=str(form.get("avatar_url", "")).strip() or None,
     )
 
     return RedirectResponse(
@@ -151,11 +141,9 @@ async def create_candidate_submit(
 async def view_candidate(
     candidate_id: UUID,
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Display a single candidate."""
-
     service = CandidateService(db)
 
     candidate = service.get_candidate(
@@ -187,16 +175,14 @@ async def view_candidate(
 @router.get(
     "/{candidate_id}/edit",
     response_class=HTMLResponse,
-    name="candidates:edit",
+    name="candidates:edit_form",
 )
-async def edit_candidate(
+async def edit_candidate_form(
     candidate_id: UUID,
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Display edit candidate form."""
-
     service = CandidateService(db)
 
     candidate = service.get_candidate(
@@ -233,29 +219,14 @@ async def edit_candidate(
 async def edit_candidate_submit(
     candidate_id: UUID,
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Update an existing candidate."""
-
-    form = await request.form()
-
     service = CandidateService(db)
 
-    candidate = service.update_candidate(
+    candidate = service.get_candidate(
         candidate_id=candidate_id,
         company_id=current_user.company_id,
-        first_name=str(form.get("first_name", "")).strip(),
-        last_name=str(form.get("last_name", "")).strip(),
-        email=str(form.get("email", "")).strip(),
-        phone=str(form.get("phone", "")).strip() or None,
-        location=str(form.get("location", "")).strip() or None,
-        linkedin_url=str(form.get("linkedin_url", "")).strip() or None,
-        portfolio_url=str(form.get("portfolio_url", "")).strip() or None,
-        summary=str(form.get("summary", "")).strip() or None,
-        status=str(form.get("status", "new")).strip() or "new",
-        source=str(form.get("source", "")).strip() or None,
-        avatar_url=str(form.get("avatar_url", "")).strip() or None,
     )
 
     if not candidate:
@@ -264,10 +235,24 @@ async def edit_candidate_submit(
             status_code=303,
         )
 
+    form = await request.form()
+
+    first_name = str(form.get("first_name", "")).strip()
+    last_name = str(form.get("last_name", "")).strip()
+    email = str(form.get("email", "")).strip()
+
+    service.update_candidate(
+        candidate_id=candidate_id,
+        company_id=current_user.company_id,
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+    )
+
     return RedirectResponse(
         url=request.url_for(
             "candidates:view",
-            candidate_id=candidate.id,
+            candidate_id=str(candidate_id),
         ),
         status_code=303,
     )
@@ -285,11 +270,9 @@ async def edit_candidate_submit(
 async def delete_candidate(
     candidate_id: UUID,
     request: Request,
-    current_user=Depends(get_current_user_profile),
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_profile),
 ):
-    """Delete a candidate."""
-
     service = CandidateService(db)
 
     service.delete_candidate(
@@ -301,4 +284,4 @@ async def delete_candidate(
         url=request.url_for("candidates:list"),
         status_code=303,
     )
-    
+
