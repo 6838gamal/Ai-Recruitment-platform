@@ -1,42 +1,28 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - منصة التوظيف الذكية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div class="min-h-screen">
-        <nav class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-blue-600">منصة التوظيف الذكية</h1>
-                <a href="/auth/logout" class="text-red-600 hover:text-red-700">تسجيل الخروج</a>
-            </div>
-        </nav>
-        
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-8">مرحباً بك في لوحة التحكم</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الوظائف</h3>
-                    <p class="text-3xl font-bold text-blue-600">0</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المرشحون</h3>
-                    <p class="text-3xl font-bold text-green-600">0</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المقابلات</h3>
-                    <p class="text-3xl font-bold text-yellow-600">0</p>
-                </div>
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الشركات</h3>
-                    <p class="text-3xl font-bold text-purple-600">0</p>
-                </div>
-            </div>
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - منصة التوظيف الذكية{% endblock %}
+
+{% block page_title %}مرحباً بك في لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">الوظائف</h3>
+            <p class="text-3xl font-bold text-primary-600">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">المرشحون</h3>
+            <p class="text-3xl font-bold text-green-600">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">المقابلات</h3>
+            <p class="text-3xl font-bold text-yellow-600">0</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">الشركات</h3>
+            <p class="text-3xl font-bold text-purple-600">0</p>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
