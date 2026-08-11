@@ -58,10 +58,12 @@ class EnhancedJinja2Templates(Jinja2Templates):
         if "current_user" not in context and hasattr(request.state, "current_user"):
             context["current_user"] = request.state.current_user
         
-        # Call parent class method
+        # Call parent class method — pass `request` as first arg to match
+        # FastAPI/Jinja2Templates.TemplateResponse signature.
         return super().TemplateResponse(
-            name=name,
-            context=context,
+            request,
+            name,
+            context,
             status_code=status_code,
             headers=headers,
             media_type=media_type,
