@@ -1,1 +1,4 @@
-"""Resume Parser module models — no DB models needed (uses candidates + files)."""
+"""Resume Parser models"""
+from app.database import Base
+
+# Resume models will be defined here

@@ -1,20 +1,7 @@
-"""Audit module routes."""
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-
-from app.core.permissions import Permission
-from app.dependencies import require_permission
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/audit", tags=["Audit"])
-templates = Jinja2Templates(directory="app/templates")
 
-
-@router.get("/", response_class=HTMLResponse, name="audit:logs")
-async def audit_logs(
-    request: Request,
-    current_user=Depends(require_permission(Permission.VIEW_AUDIT_LOGS)),
-):
-    return templates.TemplateResponse(request, "audit/list.html", {
-        "current_user": current_user, "logs": []
-    })
+@router.get("/")
+async def list_audit_logs():
+    return {"message": "Audit logs endpoint"}

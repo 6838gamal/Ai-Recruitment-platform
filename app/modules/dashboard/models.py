@@ -1,1 +1,4 @@
-"""Dashboard module — no dedicated models, reads from all other modules."""
+"""Dashboard models"""
+from app.database import Base
+
+# Dashboard models will be defined here

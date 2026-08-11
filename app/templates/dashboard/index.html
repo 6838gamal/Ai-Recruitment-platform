@@ -1,103 +1,42 @@
-{% extends "base.html" %}
-{% block title %}Dashboard — AI Recruitment Platform{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
-{% block content %}
-<div class="p-6">
-  <!-- Stats Grid - Dynamic Stats Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    {% set stat_cards = [
-      {"label": "Active Jobs", "value": stats.active_jobs|default(0), "icon": "M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "blue"},
-      {"label": "Total Candidates", "value": stats.total_candidates|default(0), "icon": "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857M7 4a3 3 0 11-6 0 3 3 0 016 0zM17 4a3 3 0 11-6 0 3 3 0 016 0z", "color": "green"},
-      {"label": "Pending Applications", "value": stats.pending_applications|default(0), "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", "color": "yellow"},
-      {"label": "Scheduled Interviews", "value": stats.scheduled_interviews|default(0), "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "color": "purple"}
-    ] %}
-    {% for card in stat_cards %}
-    <div class="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ card.label }}</span>
-        <div class="w-10 h-10 bg-{{ card.color }}-50 dark:bg-{{ card.color }}-900/20 rounded-xl flex items-center justify-center">
-          <svg class="w-6 h-6 text-{{ card.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ card.icon }}"/>
-          </svg>
-        </div>
-      </div>
-      <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ card.value }}</div>
-      <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Last 30 days</p>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- Main Grid -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Recent Activity - Dynamic -->
-    <div class="lg:col-span-2">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
-        
-        {% if recent_activities %}
-          <div class="space-y-4">
-            {% for activity in recent_activities %}
-            <div class="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-              <!-- Dynamic icon based on activity type -->
-              <div class="w-10 h-10 {% if activity.type == 'job_posted' %}bg-blue-100 dark:bg-blue-900/30{% elif activity.type == 'application_received' %}bg-green-100 dark:bg-green-900/30{% elif activity.type == 'interview_scheduled' %}bg-purple-100 dark:bg-purple-900/30{% else %}bg-gray-100 dark:bg-gray-700/30{% endif %} rounded-full flex items-center justify-center flex-shrink-0">
-                
-                {% if activity.type == 'job_posted' %}
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                {% elif activity.type == 'application_received' %}
-                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {% elif activity.type == 'interview_scheduled' %}
-                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                {% endif %}
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ activity.title }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ activity.description }}</p>
-              </div>
-              <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{{ activity.time_ago }}</span>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - منصة التوظيف الذكية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <nav class="bg-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">منصة التوظيف الذكية</h1>
+                <a href="/auth/logout" class="text-red-600 hover:text-red-700">تسجيل الخروج</a>
             </div>
-            {% endfor %}
-          </div>
-          <a href="/audit/" class="mt-4 inline-flex text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">View all →</a>
-        {% else %}
-          <div class="text-center py-8">
-            <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <p class="text-gray-500 dark:text-gray-400">No activities yet</p>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Quick Actions - Dynamic Links -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
-      <div class="space-y-2">
-        {% set quick_actions = [
-          {"label": "New Job", "icon": "M12 4v16m8-8H4", "url": "/jobs/create", "color": "blue", "enabled": permissions.can_create_jobs|default(true)},
-          {"label": "Add Candidate", "icon": "M12 4v16m8-8H4", "url": "/candidates/create", "color": "green", "enabled": permissions.can_create_candidates|default(true)},
-          {"label": "Schedule Interview", "icon": "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", "url": "/interviews/schedule", "color": "purple", "enabled": permissions.can_schedule_interviews|default(true)},
-          {"label": "AI Matching", "icon": "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13.571 21l-2.286-6.857L6 12l5.714-2.143L13.571 3z", "url": "/ai-matching/", "color": "yellow", "enabled": permissions.can_use_ai_matching|default(true)}
-        ] %}
+        </nav>
         
-        {% for action in quick_actions %}
-          {% if action.enabled %}
-          <a href="{{ action.url }}" class="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-            <svg class="w-5 h-5 text-{{ action.color }}-600 group-hover:text-{{ action.color }}-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ action.icon }}"/>
-            </svg>
-            <span class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-100">{{ action.label }}</span>
-          </a>
-          {% endif %}
-        {% endfor %}
-      </div>
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8">مرحباً بك في لوحة التحكم</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الوظائف</h3>
+                    <p class="text-3xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المرشحون</h3>
+                    <p class="text-3xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">المقابلات</h3>
+                    <p class="text-3xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">الشركات</h3>
+                    <p class="text-3xl font-bold text-purple-600">0</p>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-{% endblock %}
+</body>
+</html>

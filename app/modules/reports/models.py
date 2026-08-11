@@ -1,1 +1,4 @@
-"""Reports module models — reports are generated from existing data, no dedicated models needed."""
+"""Report models"""
+from app.database import Base
+
+# Report models will be defined here

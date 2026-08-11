@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" x-data="{ sidebarOpen: true, darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,8 +40,8 @@
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 
-    <!-- Alpine.js -->
-    <script src="https://unpkg.com/alpinejs@3.14.0/dist/cdn.min.js" defer></script>
+    <!-- Alpine.js - MUST be loaded without defer to initialize properly -->
+    <script src="https://unpkg.com/alpinejs@3.14.0/dist/cdn.min.js"></script>
 
     <!-- Chart.js (for dashboard charts) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
@@ -57,7 +57,18 @@
 <body class="bg-gray-50 dark:bg-gray-900 font-sans antialiased">
 
 {% block body %}
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden" x-data="{
+    sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    init() {
+        this.$watch('sidebarOpen', (value) => {
+            localStorage.setItem('sidebarOpen', value);
+        });
+        this.$watch('darkMode', (value) => {
+            localStorage.setItem('darkMode', value);
+        });
+    }
+}" :class="{ 'dark': darkMode }">
 
     <!-- ─── Sidebar ─────────────────────────────────────────────── -->
     {% if current_user %}

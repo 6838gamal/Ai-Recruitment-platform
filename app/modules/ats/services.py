@@ -1,8 +1,4 @@
-"""ATS module services."""
-from sqlalchemy.orm import Session
-from app.core.base.service import BaseService
+"""ATS business logic services"""
 
-
-class ATSService(BaseService):
-    def __init__(self, db: Session):
-        super().__init__(db)
+class ATSService:
+    pass
