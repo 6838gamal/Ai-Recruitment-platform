@@ -8,8 +8,9 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def list_jobs(request: Request, current_user = Depends(get_current_user_profile)):
-    # fixed TemplateResponse argument order: (template_name, context)
+    # Use the request-first TemplateResponse signature used across the app
     return templates.TemplateResponse(
+        request,
         "jobs/list.html",
         {"request": request, "current_user": current_user}
     )
@@ -21,6 +22,7 @@ async def create_job_form(request: Request, current_user = Depends(get_current_u
     Render the job creation form (GET /jobs/create).
     """
     return templates.TemplateResponse(
+        request,
         "jobs/create.html",
         {"request": request, "current_user": current_user}
     )
