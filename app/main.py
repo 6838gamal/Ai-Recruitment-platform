@@ -100,6 +100,12 @@ templates = Jinja2Templates(
 # "unhashable type: 'dict'" errors coming from Jinja2's internal cache.
 env = getattr(templates, "env", None) or getattr(templates, "environment", None)
 if env is not None:
+    # Emergency: disable Jinja2 template caching to avoid crashes when the
+    # cache key construction includes unhashable values. This is a safe
+    # short-term mitigation; it can be removed/replaced once we sanitize
+    # env.globals or ensure only hashable values are used in cache keys.
+    env.cache = {}
+
     _orig_get_template = env.get_template
 
     class _HashableWrapper:
