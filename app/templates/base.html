@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" x-data="{ sidebarOpen: true, darkMode: false }" :class="{ 'dark': darkMode }">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,8 +40,8 @@
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 
-    <!-- Alpine.js -->
-    <script src="https://unpkg.com/alpinejs@3.14.0/dist/cdn.min.js" defer></script>
+    <!-- Alpine.js - MUST be loaded without defer to initialize properly -->
+    <script src="https://unpkg.com/alpinejs@3.14.0/dist/cdn.min.js"></script>
 
     <!-- Chart.js (for dashboard charts) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
@@ -52,37 +52,36 @@
         .htmx-request .htmx-indicator { display: inline; }
     </style>
 
-    <!-- Ensure Alpine.js state is ready before rendering -->
-    <script>
-        // Initialize sidebar state from localStorage or default to true
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedState = localStorage.getItem('sidebarOpen');
-            if (savedState === null) {
-                localStorage.setItem('sidebarOpen', 'true');
-            }
-        });
-    </script>
-
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 font-sans antialiased">
 
 {% block body %}
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden" x-data="{
+    sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    init() {
+        this.$watch('sidebarOpen', (value) => {
+            localStorage.setItem('sidebarOpen', value);
+        });
+        this.$watch('darkMode', (value) => {
+            localStorage.setItem('darkMode', value);
+        });
+    }
+}" :class="{ 'dark': darkMode }">
 
     <!-- ─── Sidebar ─────────────────────────────────────────────── -->
     {% if current_user %}
     <aside
         class="flex flex-col bg-gray-900 dark:bg-gray-950 text-white transition-all duration-300 ease-in-out z-30"
         :class="sidebarOpen ? 'w-64' : 'w-16'"
-        @change="localStorage.setItem('sidebarOpen', sidebarOpen)"
     >
         <!-- Logo -->
         <div class="flex items-center h-16 px-4 border-b border-gray-700/50">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
                 </div>
                 <span class="font-semibold text-sm truncate" x-show="sidebarOpen" x-cloak>AI Recruit</span>
