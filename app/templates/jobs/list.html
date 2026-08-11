@@ -1,5 +1,5 @@
+
 {% extends "base.html" %}
-{% import "partials/dynamic_table.html" as table %}
 
 {% block title %}الوظائف - منصة التوظيف الذكية{% endblock %}
 
@@ -7,28 +7,296 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">قائمة الوظائف</h2>
-        <a href="/jobs/create" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                قائمة الوظائف
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                إدارة الوظائف المنشورة والمسودات
+            </p>
+        </div>
+
+        <a
+            href="/jobs/create"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+        >
+            <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                />
             </svg>
+
             إضافة وظيفة جديدة
         </a>
     </div>
-    
-    {{ table.dynamic_table(
-        items=jobs if jobs else [],
-        fields=[
-            {'name': 'title', 'type': 'str'},
-            {'name': 'company', 'type': 'str'},
-            {'name': 'status', 'type': 'str'}
-        ],
-        item_url_prefix='/jobs/',
-        empty_message='لا توجد وظائف حالياً',
-        invite_url='/jobs/create',
-        can_edit=True,
-        can_delete=True
-    ) }}
+
+    <!-- Jobs Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+
+        {% if jobs %}
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-right">
+
+                <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+
+                        <th class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                            الوظيفة
+                        </th>
+
+                        <th class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                            الشركة
+                        </th>
+
+                        <th class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                            الموقع
+                        </th>
+
+                        <th class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                            الحالة
+                        </th>
+
+                        <th class="px-6 py-4 font-semibold text-gray-700 dark:text-gray-300">
+                            الإجراءات
+                        </th>
+
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
+                    {% for job in jobs %}
+
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+
+                        <!-- Job Title -->
+                        <td class="px-6 py-4">
+                            <a
+                                href="/jobs/{{ job.id }}"
+                                class="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                            >
+                                {{ job.title }}
+                            </a>
+                        </td>
+
+                        <!-- Company -->
+                        <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                            {% if job.company %}
+                                {{ job.company.name }}
+                            {% else %}
+                                <span class="text-gray-400 dark:text-gray-500">
+                                    غير محددة
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Location -->
+                        <td class="px-6 py-4 text-gray-700 dark:text-gray-300">
+                            {% if job.location %}
+                                {{ job.location }}
+                            {% else %}
+                                <span class="text-gray-400 dark:text-gray-500">
+                                    غير محدد
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4">
+
+                            {% if job.status == 'published' %}
+
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                    منشورة
+                                </span>
+
+                            {% elif job.status == 'closed' %}
+
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                    مغلقة
+                                </span>
+
+                            {% else %}
+
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                    مسودة
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4">
+
+                            <div class="flex items-center gap-2">
+
+                                <!-- View -->
+                                <a
+                                    href="/jobs/{{ job.id }}"
+                                    title="عرض"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
+                                >
+                                    <svg
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                    </svg>
+                                </a>
+
+                                <!-- Edit -->
+                                <a
+                                    href="/jobs/{{ job.id }}/edit"
+                                    title="تعديل"
+                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 transition-colors"
+                                >
+                                    <svg
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"
+                                        />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                                        />
+                                    </svg>
+                                </a>
+
+                                <!-- Delete -->
+                                <form
+                                    method="post"
+                                    action="/jobs/{{ job.id }}/delete"
+                                    onsubmit="return confirm('هل أنت متأكد من حذف هذه الوظيفة؟');"
+                                    class="inline"
+                                >
+                                    <button
+                                        type="submit"
+                                        title="حذف"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 transition-colors"
+                                    >
+                                        <svg
+                                            class="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-7 0h10"
+                                            />
+                                        </svg>
+                                    </button>
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+        {% else %}
+
+        <!-- Empty State -->
+        <div class="py-16 px-6 text-center">
+
+            <div class="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+
+                <svg
+                    class="w-8 h-8 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                </svg>
+
+            </div>
+
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                لا توجد وظائف حالياً
+            </h3>
+
+            <p class="text-gray-500 dark:text-gray-400 mb-6">
+                ابدأ بإضافة أول وظيفة إلى منصة التوظيف.
+            </p>
+
+            <a
+                href="/jobs/create"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+            >
+                <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                    />
+                </svg>
+
+                إضافة وظيفة
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
 </div>
 {% endblock %}
