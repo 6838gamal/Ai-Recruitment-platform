@@ -49,11 +49,26 @@ class JobPosting(Base, BaseModel):
         index=True,
     )
 
+    created_by_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey(
+            "users.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
     company = relationship(
         "Company",
         lazy="select",
     )
 
+    created_by = relationship(
+        "User",
+        foreign_keys=[created_by_id],
+        lazy="select",
+    )
+
     def __repr__(self) -> str:
         return f"<JobPosting title={self.title!r} id={self.id}>"
-
