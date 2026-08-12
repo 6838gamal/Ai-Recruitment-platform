@@ -1,7 +1,7 @@
-
 """Users module routes."""
 
 from urllib.parse import quote_plus
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -18,7 +18,10 @@ from app.utils.enhanced_templates import EnhancedJinja2Templates
 from app.utils.inspect_model import get_model_fields_sqlalchemy
 
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"],
+)
 
 templates = EnhancedJinja2Templates(
     directory="app/templates"
@@ -26,9 +29,55 @@ templates = EnhancedJinja2Templates(
 
 
 # ============================================================
-# USERS
+# HELPERS
 # ============================================================
 
+def get_companies(db: Session):
+    """Return all active companies."""
+
+    try:
+        from app.modules.companies.models import Company
+
+        return (
+            db.query(Company)
+            .filter(
+                Company.deleted_at.is_(None)
+            )
+            .order_by(Company.name.asc())
+            .all()
+        )
+
+    except Exception:
+        return []
+
+
+def render_job_create(
+    request: Request,
+    current_user,
+    db: Session,
+    error: str | None = None,
+    form_values=None,
+    status_code: int = 200,
+):
+    """Render the job creation form."""
+
+    return templates.TemplateResponse(
+        request,
+        "jobs/create.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "companies": get_companies(db),
+            "error": error,
+            "form_values": form_values,
+        },
+        status_code=status_code,
+    )
+
+
+# ============================================================
+# USERS
+# ============================================================
 
 @router.get(
     "/",
@@ -43,6 +92,7 @@ async def list_users(
     """List users."""
 
     repo = UserProfileRepository(db)
+
     users = []
 
     try:
@@ -52,10 +102,13 @@ async def list_users(
             )
         else:
             users = repo.get_all()
+
     except Exception:
         users = []
 
-    fields = get_model_fields_sqlalchemy(UserProfile)
+    fields = get_model_fields_sqlalchemy(
+        UserProfile
+    )
 
     try:
         return templates.TemplateResponse(
@@ -90,7 +143,9 @@ async def create_user_form(
 ):
     """Display user creation form."""
 
-    fields = get_model_fields_sqlalchemy(UserProfile)
+    fields = get_model_fields_sqlalchemy(
+        UserProfile
+    )
 
     return templates.TemplateResponse(
         request,
@@ -113,15 +168,38 @@ async def create_user_submit(
 ):
     """Create a user profile."""
 
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be logged in.",
+        )
+
     form = await request.form()
 
+    # --------------------------------------------------------
+    # IMPORTANT:
+    # Never trust user_id from the HTML form.
+    #
+    # The authenticated user's ID is the only trusted value.
+    # --------------------------------------------------------
+
+    authenticated_user_id = getattr(
+        current_user,
+        "user_id",
+        None,
+    )
+
+    if not authenticated_user_id:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Current user profile is missing user_id."
+            ),
+        )
+
     data = {
-        "user_id": form.get("user_id"),
-        "company_id": (
-            current_user.company_id
-            if current_user
-            else None
-        ),
+        "user_id": authenticated_user_id,
+        "company_id": current_user.company_id,
         "role": form.get("role") or "user",
         "first_name": form.get("first_name"),
         "last_name": form.get("last_name"),
@@ -144,7 +222,9 @@ async def create_user_submit(
     except IntegrityError as exc:
         db.rollback()
 
-        fields = get_model_fields_sqlalchemy(UserProfile)
+        fields = get_model_fields_sqlalchemy(
+            UserProfile
+        )
 
         error = (
             str(exc.orig)
@@ -191,7 +271,9 @@ async def user_detail(
             detail="User not found",
         )
 
-    fields = get_model_fields_sqlalchemy(UserProfile)
+    fields = get_model_fields_sqlalchemy(
+        UserProfile
+    )
 
     return templates.TemplateResponse(
         request,
@@ -229,7 +311,9 @@ async def edit_user_form(
             detail="User not found",
         )
 
-    fields = get_model_fields_sqlalchemy(UserProfile)
+    fields = get_model_fields_sqlalchemy(
+        UserProfile
+    )
 
     return templates.TemplateResponse(
         request,
@@ -307,7 +391,9 @@ async def edit_user_submit(
     except IntegrityError as exc:
         db.rollback()
 
-        fields = get_model_fields_sqlalchemy(UserProfile)
+        fields = get_model_fields_sqlalchemy(
+            UserProfile
+        )
 
         error = (
             str(exc.orig)
@@ -363,7 +449,6 @@ async def delete_user(
 # JOBS
 # ============================================================
 
-
 @router.get(
     "/jobs/create",
     response_class=HTMLResponse,
@@ -379,25 +464,30 @@ async def create_job_form(
     if not current_user:
         raise HTTPException(
             status_code=401,
-            detail="You must be logged in to create a job.",
+            detail=(
+                "You must be logged in "
+                "to create a job."
+            ),
         )
 
-    companies = []
+    # --------------------------------------------------------
+    # Verify authenticated profile
+    # --------------------------------------------------------
 
-    try:
-        from app.modules.companies.models import Company
+    created_by_id = getattr(
+        current_user,
+        "user_id",
+        None,
+    )
 
-        companies = (
-            db.query(Company)
-            .filter(
-                Company.deleted_at.is_(None)
-            )
-            .order_by(Company.name.asc())
-            .all()
+    if not created_by_id:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Authenticated user profile "
+                "does not contain user_id."
+            ),
         )
-
-    except Exception:
-        companies = []
 
     return templates.TemplateResponse(
         request,
@@ -405,7 +495,7 @@ async def create_job_form(
         {
             "request": request,
             "current_user": current_user,
-            "companies": companies,
+            "companies": get_companies(db),
         },
     )
 
@@ -418,29 +508,22 @@ async def create_job_submit(
 ):
     """Create a new job posting."""
 
-    # --------------------------------------------------------
-    # Authentication
-    # --------------------------------------------------------
+    # ========================================================
+    # 1. AUTHENTICATION
+    # ========================================================
 
     if not current_user:
         raise HTTPException(
             status_code=401,
-            detail="You must be logged in to create a job.",
+            detail=(
+                "You must be logged in "
+                "to create a job."
+            ),
         )
 
-    # --------------------------------------------------------
-    # Get the real User ID
-    # --------------------------------------------------------
-    #
-    # UserProfile:
-    #
-    #     id       -> user_profiles.id
-    #     user_id  -> users.id
-    #
-    # JobPosting.created_by_id references users.id.
-    #
-    # Therefore we MUST use current_user.user_id.
-    #
+    # ========================================================
+    # 2. GET USER ID FROM AUTHENTICATED PROFILE
+    # ========================================================
 
     created_by_id = getattr(
         current_user,
@@ -448,18 +531,58 @@ async def create_job_submit(
         None,
     )
 
-    if not created_by_id:
+    if created_by_id is None:
         raise HTTPException(
             status_code=400,
             detail=(
-                "Unable to determine the current user's ID. "
-                "The current user profile has no valid user_id."
+                "Unable to determine the authenticated "
+                "user ID. UserProfile.user_id is NULL."
             ),
         )
 
     # --------------------------------------------------------
-    # Read form
+    # Convert to UUID
     # --------------------------------------------------------
+
+    try:
+        created_by_id = UUID(
+            str(created_by_id)
+        )
+
+    except (ValueError, TypeError, AttributeError):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "The authenticated user's ID "
+                "is not a valid UUID."
+            ),
+        )
+
+    # ========================================================
+    # 3. VERIFY USER PROFILE
+    # ========================================================
+
+    profile = (
+        db.query(UserProfile)
+        .filter(
+            UserProfile.user_id == created_by_id,
+            UserProfile.deleted_at.is_(None),
+        )
+        .first()
+    )
+
+    if not profile:
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "The authenticated user does not have "
+                "a valid active UserProfile."
+            ),
+        )
+
+    # ========================================================
+    # 4. READ FORM
+    # ========================================================
 
     form = await request.form()
 
@@ -488,41 +611,62 @@ async def create_job_submit(
         or ""
     ).strip()
 
-    # --------------------------------------------------------
-    # Validate title
-    # --------------------------------------------------------
+    # ========================================================
+    # 5. VALIDATE TITLE
+    # ========================================================
 
     if not title:
-        return templates.TemplateResponse(
-            request,
-            "jobs/create.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "error": "Job title is required.",
-                "form_values": form,
-            },
+        return render_job_create(
+            request=request,
+            current_user=current_user,
+            db=db,
+            error="Job title is required.",
+            form_values=form,
             status_code=400,
         )
 
-    # --------------------------------------------------------
-    # Company
-    # --------------------------------------------------------
+    # ========================================================
+    # 6. COMPANY
+    # ========================================================
 
     if not company_id:
         company_id = getattr(
-            current_user,
+            profile,
             "company_id",
             None,
         )
 
-    # Empty string -> None
     if company_id == "":
         company_id = None
 
     # --------------------------------------------------------
-    # Create JobPosting
+    # Convert company ID to UUID if provided
     # --------------------------------------------------------
+
+    if company_id:
+
+        try:
+            company_id = UUID(
+                str(company_id)
+            )
+
+        except (
+            ValueError,
+            TypeError,
+            AttributeError,
+        ):
+            return render_job_create(
+                request=request,
+                current_user=current_user,
+                db=db,
+                error="Invalid company ID.",
+                form_values=form,
+                status_code=400,
+            )
+
+    # ========================================================
+    # 7. CREATE JOB
+    # ========================================================
 
     job = JobPosting(
         title=title,
@@ -533,7 +677,12 @@ async def create_job_submit(
         created_by_id=created_by_id,
     )
 
+    # ========================================================
+    # 8. SAVE
+    # ========================================================
+
     try:
+
         db.add(job)
 
         db.commit()
@@ -541,6 +690,7 @@ async def create_job_submit(
         db.refresh(job)
 
     except IntegrityError as exc:
+
         db.rollback()
 
         error = (
@@ -549,33 +699,12 @@ async def create_job_submit(
             else str(exc)
         )
 
-        companies = []
-
-        try:
-            from app.modules.companies.models import Company
-
-            companies = (
-                db.query(Company)
-                .filter(
-                    Company.deleted_at.is_(None)
-                )
-                .order_by(Company.name.asc())
-                .all()
-            )
-
-        except Exception:
-            companies = []
-
-        return templates.TemplateResponse(
-            request,
-            "jobs/create.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "companies": companies,
-                "error": error,
-                "form_values": form,
-            },
+        return render_job_create(
+            request=request,
+            current_user=current_user,
+            db=db,
+            error=error,
+            form_values=form,
             status_code=400,
         )
 
@@ -583,9 +712,9 @@ async def create_job_submit(
         db.rollback()
         raise
 
-    # --------------------------------------------------------
-    # Success
-    # --------------------------------------------------------
+    # ========================================================
+    # 9. SUCCESS
+    # ========================================================
 
     return RedirectResponse(
         url="/jobs/",
