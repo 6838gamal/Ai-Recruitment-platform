@@ -155,7 +155,7 @@ async def render_create_job_form(
 
     return templates.TemplateResponse(
         request,
-        "jobs/create.html",
+        "jobs/form.html",
         {
             "request": request,
             "current_user": current_user,
