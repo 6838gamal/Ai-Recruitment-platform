@@ -1,15 +1,14 @@
-
-"""Job models."""
+"""Jobs module SQLAlchemy models."""
 
 import uuid
 from typing import Optional
 
 from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
 from app.core.base.model import BaseModel
+from app.database import Base
 
 
 class JobPosting(Base, BaseModel):
@@ -37,10 +36,11 @@ class JobPosting(Base, BaseModel):
         String(50),
         nullable=False,
         default="draft",
+        server_default="draft",
     )
 
     company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        PG_UUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey(
             "companies.id",
             ondelete="CASCADE",
@@ -49,11 +49,13 @@ class JobPosting(Base, BaseModel):
         index=True,
     )
 
+    # IMPORTANT:
+    # This references users.id, NOT user_profiles.id.
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey(
             "users.id",
-            ondelete="CASCADE",
+            ondelete="RESTRICT",
         ),
         nullable=False,
         index=True,
@@ -71,4 +73,8 @@ class JobPosting(Base, BaseModel):
     )
 
     def __repr__(self) -> str:
-        return f"<JobPosting title={self.title!r} id={self.id}>"
+        return (
+            f"<JobPosting "
+            f"title={self.title!r} "
+            f"id={self.id}>"
+        )
