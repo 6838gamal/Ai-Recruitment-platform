@@ -1,9 +1,18 @@
 """Jobs module SQLAlchemy models."""
 
 import uuid
+from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import (
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,27 +25,108 @@ class JobPosting(Base, BaseModel):
 
     __tablename__ = "job_postings"
 
+    # ============================================================
+    # BASIC RELATIONSHIPS
+    # ============================================================
+
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "companies.id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "branches.id",
+        ),
+        nullable=True,
+    )
+
+    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "departments.id",
+        ),
+        nullable=True,
+    )
+
+    # IMPORTANT:
+    # The database migration says this references
+    # user_profiles.id, NOT users.id.
+    created_by_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "user_profiles.id",
+        ),
+        nullable=False,
+    )
+
+    # ============================================================
+    # JOB INFORMATION
+    # ============================================================
+
     title: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
         index=True,
     )
 
-    description: Mapped[Optional[str]] = mapped_column(
+    description: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+
+    requirements: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
 
-    location: Mapped[Optional[str]] = mapped_column(
-        String(255),
+    responsibilities: Mapped[Optional[str]] = mapped_column(
+        Text,
         nullable=True,
     )
 
-    status: Mapped[str] = mapped_column(
+    employment_type: Mapped[Optional[str]] = mapped_column(
         String(50),
-        nullable=False,
-        default="draft",
-        server_default="draft",
+        nullable=True,
+    )
+
+    work_type: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    # ============================================================
+    # EXPERIENCE
+    # ============================================================
+
+    experience_min: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    experience_max: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    # ============================================================
+    # SALARY
+    # ============================================================
+
+    salary_min: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(12, 2),
+        nullable=True,
+    )
+
+    salary_max: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(12, 2),
+        nullable=True,
     )
 
     salary_currency: Mapped[str] = mapped_column(
@@ -46,38 +136,66 @@ class JobPosting(Base, BaseModel):
         server_default="USD",
     )
 
-    company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey(
-            "companies.id",
-            ondelete="CASCADE",
-        ),
-        nullable=True,
+    # ============================================================
+    # STATUS
+    # ============================================================
+
+    status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="draft",
+        server_default="draft",
         index=True,
     )
 
-    # IMPORTANT:
-    # This references users.id, NOT user_profiles.id.
-    created_by_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey(
-            "users.id",
-            ondelete="RESTRICT",
-        ),
-        nullable=False,
-        index=True,
+    # ============================================================
+    # EXPIRATION
+    # ============================================================
+
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
     )
+
+    # ============================================================
+    # HEADCOUNT
+    # ============================================================
+
+    headcount: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
+    )
+
+    # ============================================================
+    # RELATIONSHIPS
+    # ============================================================
 
     company = relationship(
         "Company",
         lazy="select",
     )
 
+    branch = relationship(
+        "Branch",
+        lazy="select",
+    )
+
+    department = relationship(
+        "Department",
+        lazy="select",
+    )
+
     created_by = relationship(
-        "User",
+        "UserProfile",
         foreign_keys=[created_by_id],
         lazy="select",
     )
+
+    # ============================================================
+    # REPRESENTATION
+    # ============================================================
 
     def __repr__(self) -> str:
         return (
