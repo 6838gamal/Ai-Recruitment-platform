@@ -463,14 +463,12 @@ async def create_job_submit(
 
     job = JobPosting(
         title=title,
-        description=description,
-        location=location or None,
-        status=status,
-        company_id=company_id,
-        created_by_id=created_by_id,
-        salary_min=salary_min,
-        salary_max=salary_max,
-        salary_currency=salary_currency,
+    description=description or None,
+    location=location or None,
+    status=status,
+    company_id=company_id,
+    created_by_id=created_by_id,
+    salary_currency=salary_currency,
     )
 
     # --------------------------------------------------------
