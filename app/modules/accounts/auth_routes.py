@@ -1,21 +1,40 @@
+"""Authentication routes."""
+
 from fastapi import APIRouter, Depends, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
-from app.utils.enhanced_templates import EnhancedJinja2Templates
 from sqlalchemy.orm import Session
 
+from app.utils.enhanced_templates import EnhancedJinja2Templates
 from app.database import get_db
 from app.modules.accounts.services import AuthService
 from app.modules.accounts.schemas import LoginSchema
 from app.config import settings
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
-templates = EnhancedJinja2Templates(directory="app/templates")
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["Auth"],
+)
+
+templates = EnhancedJinja2Templates(
+    directory="app/templates"
+)
 
 
-@router.get("/login", response_class=HTMLResponse)
+@router.get(
+    "/login",
+    response_class=HTMLResponse,
+)
 async def get_login(request: Request):
     """Render the login page."""
-    return templates.TemplateResponse(request, "auth/login.html", {"request": request})
+
+    return templates.TemplateResponse(
+        request,
+        "auth/login.html",
+        {
+            "request": request,
+        },
+    )
 
 
 @router.post("/login")
@@ -26,26 +45,90 @@ async def post_login(
     remember_me: str = Form(None),
     db: Session = Depends(get_db),
 ):
-    """Handle login form submission and set auth cookies on success."""
+    """Authenticate user and create authentication cookies."""
+
     service = AuthService(db)
 
-    data = LoginSchema(email=email, password=password)
+    data = LoginSchema(
+        email=email,
+        password=password,
+    )
+
     try:
-        access_token, refresh_token, user = service.login(data, request=request)
+        access_token, refresh_token, user = service.login(
+            data,
+            request=request,
+        )
+
     except Exception as exc:
-        # On failure, re-render login with error message
+        db.rollback()
+
         return templates.TemplateResponse(
             request,
             "auth/login.html",
-            {"request": request, "error": str(exc)},
+            {
+                "request": request,
+                "error": str(exc),
+                "email": email,
+            },
+            status_code=401,
         )
 
-    # Successful login — set cookies and redirect to dashboard
-    response = RedirectResponse(url="/dashboard", status_code=302)
+    # ---------------------------------------------------------
+    # Validate authenticated user
+    # ---------------------------------------------------------
 
-    # Cookie settings
+    if not user:
+        return templates.TemplateResponse(
+            request,
+            "auth/login.html",
+            {
+                "request": request,
+                "error": "تعذر تحديد المستخدم بعد تسجيل الدخول.",
+                "email": email,
+            },
+            status_code=401,
+        )
+
+    if not getattr(user, "id", None):
+        return templates.TemplateResponse(
+            request,
+            "auth/login.html",
+            {
+                "request": request,
+                "error": "حساب المستخدم غير صالح.",
+                "email": email,
+            },
+            status_code=401,
+        )
+
+    # ---------------------------------------------------------
+    # Successful login
+    # ---------------------------------------------------------
+
+    response = RedirectResponse(
+        url="/dashboard",
+        status_code=302,
+    )
+
     secure = not settings.DEBUG
-    max_age = 60 * 60 * 24 * 7 if remember_me else 60 * 15  # 7 days vs short-lived
+
+    access_max_age = (
+        60 * 60 * 24 * 7
+        if remember_me
+        else 60 * 15
+    )
+
+    refresh_max_age = (
+        60
+        * 60
+        * 24
+        * settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+    )
+
+    # ---------------------------------------------------------
+    # Access token
+    # ---------------------------------------------------------
 
     response.set_cookie(
         key="access_token",
@@ -54,8 +137,12 @@ async def post_login(
         secure=secure,
         samesite="lax",
         path="/",
-        max_age=max_age,
+        max_age=access_max_age,
     )
+
+    # ---------------------------------------------------------
+    # Refresh token
+    # ---------------------------------------------------------
 
     response.set_cookie(
         key="refresh_token",
@@ -64,25 +151,50 @@ async def post_login(
         secure=secure,
         samesite="lax",
         path="/",
-        max_age=60 * 60 * 24 * settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS,
+        max_age=refresh_max_age,
     )
 
     return response
 
 
 @router.post("/logout")
-async def post_logout(request: Request, db: Session = Depends(get_db)):
-    """Logout: revoke refresh token (if present) and clear cookies."""
+async def post_logout(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Logout user and clear authentication cookies."""
+
     service = AuthService(db)
-    refresh_token = request.cookies.get("refresh_token")
+
+    refresh_token = request.cookies.get(
+        "refresh_token"
+    )
+
     if refresh_token:
+
         try:
             service.logout(refresh_token)
         except Exception:
-            pass
+            db.rollback()
 
-    response = RedirectResponse(url="/auth/login", status_code=302)
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("refresh_token", path="/")
-    response.delete_cookie("session", path="/")
+    response = RedirectResponse(
+        url="/auth/login",
+        status_code=302,
+    )
+
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
+
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+    )
+
+    response.delete_cookie(
+        key="session",
+        path="/",
+    )
+
     return response
