@@ -1,5 +1,6 @@
 """Jobs module routes."""
 
+from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -33,9 +34,6 @@ templates = EnhancedJinja2Templates(
 def get_companies(db: Session):
     """
     Return all active companies.
-
-    This helper keeps company loading in one place and prevents
-    template errors when the company query fails.
     """
 
     try:
@@ -56,6 +54,86 @@ def get_companies(db: Session):
         return []
 
 
+def parse_decimal(value):
+    """
+    Convert a form value to Decimal.
+
+    Empty values become None.
+    Invalid values also become None.
+    """
+
+    if value is None:
+        return None
+
+    value = str(value).strip()
+
+    if not value:
+        return None
+
+    try:
+        return Decimal(value)
+
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def build_form_job(form_values=None):
+    """
+    Build a lightweight object containing form values.
+
+    The create.html template expects a `job` object.
+    We populate it from submitted form values so validation
+    errors can redisplay the user's input.
+    """
+
+    class FormJob:
+        pass
+
+    job = FormJob()
+
+    form_values = form_values or {}
+
+    job.title = str(
+        form_values.get("title") or ""
+    ).strip()
+
+    job.description = str(
+        form_values.get("description") or ""
+    ).strip()
+
+    job.location = str(
+        form_values.get("location") or ""
+    ).strip()
+
+    job.status = str(
+        form_values.get("status") or "draft"
+    ).strip().lower()
+
+    job.company_id = (
+        form_values.get("company_id")
+        or None
+    )
+
+    job.salary_min = parse_decimal(
+        form_values.get("salary_min")
+    )
+
+    job.salary_max = parse_decimal(
+        form_values.get("salary_max")
+    )
+
+    job.salary_currency = (
+        str(
+            form_values.get("salary_currency")
+            or "USD"
+        )
+        .strip()
+        .upper()
+    )
+
+    return job
+
+
 async def render_create_job_form(
     request: Request,
     db: Session,
@@ -67,11 +145,13 @@ async def render_create_job_form(
     """
     Render the create job page.
 
-    Used both for the initial GET request and when validation
-    or database errors occur.
+    Used for both the initial GET request and when
+    validation/database errors occur.
     """
 
     companies = get_companies(db)
+
+    job = build_form_job(form_values)
 
     return templates.TemplateResponse(
         request,
@@ -80,8 +160,10 @@ async def render_create_job_form(
             "request": request,
             "current_user": current_user,
             "companies": companies,
+            "job": job,
             "error": error,
             "form_values": form_values,
+            "action": "create",
         },
         status_code=status_code,
     )
@@ -104,8 +186,8 @@ async def list_jobs(
     """
     Display all active job postings.
 
-    Jobs are filtered by the current user's company when a
-    company is available.
+    Jobs are filtered by the current user's company
+    when a company is available.
     """
 
     query = (
@@ -196,11 +278,8 @@ async def create_job_submit(
     """
     Create a new job posting.
 
-    IMPORTANT:
-    created_by_id is taken directly from the authenticated
-    JWT's `sub` claim through get_current_user_id().
-
-    It MUST NOT depend on current_user.user_id.
+    The authenticated user ID is taken from JWT.sub
+    through get_current_user_id().
     """
 
     # --------------------------------------------------------
@@ -220,10 +299,7 @@ async def create_job_submit(
     if not current_user_id:
         raise HTTPException(
             status_code=401,
-            detail=(
-                "Unable to determine the authenticated "
-                "user ID."
-            ),
+            detail="Unable to determine the authenticated user ID.",
         )
 
     # --------------------------------------------------------
@@ -253,6 +329,27 @@ async def create_job_submit(
     ).strip()
 
     # --------------------------------------------------------
+    # Salary
+    # --------------------------------------------------------
+
+    salary_min = parse_decimal(
+        form.get("salary_min")
+    )
+
+    salary_max = parse_decimal(
+        form.get("salary_max")
+    )
+
+    salary_currency = (
+        str(
+            form.get("salary_currency")
+            or "USD"
+        )
+        .strip()
+        .upper()
+    )
+
+    # --------------------------------------------------------
     # Validate title
     # --------------------------------------------------------
 
@@ -262,6 +359,20 @@ async def create_job_submit(
             db=db,
             current_user=current_user,
             error="Job title is required.",
+            form_values=form,
+            status_code=400,
+        )
+
+    # --------------------------------------------------------
+    # Validate description
+    # --------------------------------------------------------
+
+    if not description:
+        return await render_create_job_form(
+            request=request,
+            db=db,
+            current_user=current_user,
+            error="Job description is required.",
             form_values=form,
             status_code=400,
         )
@@ -279,6 +390,31 @@ async def create_job_submit(
 
     if status not in allowed_statuses:
         status = "draft"
+
+    # --------------------------------------------------------
+    # Validate salary currency
+    # --------------------------------------------------------
+
+    if not salary_currency:
+        salary_currency = "USD"
+
+    # --------------------------------------------------------
+    # Validate salary range
+    # --------------------------------------------------------
+
+    if (
+        salary_min is not None
+        and salary_max is not None
+        and salary_min > salary_max
+    ):
+        return await render_create_job_form(
+            request=request,
+            db=db,
+            current_user=current_user,
+            error="Minimum salary cannot be greater than maximum salary.",
+            form_values=form,
+            status_code=400,
+        )
 
     # --------------------------------------------------------
     # Resolve company
@@ -303,8 +439,6 @@ async def create_job_submit(
             )
 
     else:
-        # If the user didn't select a company,
-        # use the user's company.
         company_id = getattr(
             current_user,
             "company_id",
@@ -312,30 +446,10 @@ async def create_job_submit(
         )
 
     # --------------------------------------------------------
-    # IMPORTANT AUTHENTICATION FIX
-    # --------------------------------------------------------
-    #
-    # `current_user` is UserProfile.
-    #
-    # UserProfile:
-    #
-    #     id       -> user_profiles.id
-    #     user_id  -> users.id
-    #
-    # JobPosting.created_by_id:
-    #
-    #     -> users.id
-    #
-    # Therefore we use current_user_id, which comes directly
-    # from JWT.sub.
-    #
+    # Created by
     # --------------------------------------------------------
 
     created_by_id = current_user_id
-
-    # --------------------------------------------------------
-    # Final safety check
-    # --------------------------------------------------------
 
     if not created_by_id:
         raise HTTPException(
@@ -349,11 +463,14 @@ async def create_job_submit(
 
     job = JobPosting(
         title=title,
-        description=description or None,
+        description=description,
         location=location or None,
         status=status,
         company_id=company_id,
         created_by_id=created_by_id,
+        salary_min=salary_min,
+        salary_max=salary_max,
+        salary_currency=salary_currency,
     )
 
     # --------------------------------------------------------
@@ -488,6 +605,7 @@ async def edit_job_form(
             "job": job,
             "companies": companies,
             "current_user": current_user,
+            "action": "edit",
         },
     )
 
@@ -509,6 +627,12 @@ async def edit_job_submit(
     Update an existing job posting.
     """
 
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be logged in to edit a job.",
+        )
+
     job = (
         db.query(JobPosting)
         .filter(
@@ -524,10 +648,16 @@ async def edit_job_submit(
             detail="Job not found.",
         )
 
+    # --------------------------------------------------------
+    # Read form
+    # --------------------------------------------------------
+
     form = await request.form()
 
     title = str(
-        form.get("title") or job.title
+        form.get("title")
+        if form.get("title") is not None
+        else (job.title or "")
     ).strip()
 
     description = str(
@@ -545,12 +675,34 @@ async def edit_job_submit(
     status = str(
         form.get("status")
         if form.get("status") is not None
-        else job.status
+        else (job.status or "draft")
     ).strip().lower()
 
     company_id_raw = str(
         form.get("company_id") or ""
     ).strip()
+
+    salary_min = parse_decimal(
+        form.get("salary_min")
+        if form.get("salary_min") is not None
+        else getattr(job, "salary_min", None)
+    )
+
+    salary_max = parse_decimal(
+        form.get("salary_max")
+        if form.get("salary_max") is not None
+        else getattr(job, "salary_max", None)
+    )
+
+    salary_currency = (
+        str(
+            form.get("salary_currency")
+            or getattr(job, "salary_currency", None)
+            or "USD"
+        )
+        .strip()
+        .upper()
+    )
 
     # --------------------------------------------------------
     # Validate title
@@ -569,6 +721,29 @@ async def edit_job_submit(
                 "current_user": current_user,
                 "error": "Job title is required.",
                 "form_values": form,
+                "action": "edit",
+            },
+            status_code=400,
+        )
+
+    # --------------------------------------------------------
+    # Validate description
+    # --------------------------------------------------------
+
+    if not description:
+        companies = get_companies(db)
+
+        return templates.TemplateResponse(
+            request,
+            "jobs/edit.html",
+            {
+                "request": request,
+                "job": job,
+                "companies": companies,
+                "current_user": current_user,
+                "error": "Job description is required.",
+                "form_values": form,
+                "action": "edit",
             },
             status_code=400,
         )
@@ -586,6 +761,35 @@ async def edit_job_submit(
 
     if status not in allowed_statuses:
         status = "draft"
+
+    # --------------------------------------------------------
+    # Validate salary
+    # --------------------------------------------------------
+
+    if not salary_currency:
+        salary_currency = "USD"
+
+    if (
+        salary_min is not None
+        and salary_max is not None
+        and salary_min > salary_max
+    ):
+        companies = get_companies(db)
+
+        return templates.TemplateResponse(
+            request,
+            "jobs/edit.html",
+            {
+                "request": request,
+                "job": job,
+                "companies": companies,
+                "current_user": current_user,
+                "error": "Minimum salary cannot be greater than maximum salary.",
+                "form_values": form,
+                "action": "edit",
+            },
+            status_code=400,
+        )
 
     # --------------------------------------------------------
     # Company
@@ -610,6 +814,7 @@ async def edit_job_submit(
                     "current_user": current_user,
                     "error": "Invalid company ID.",
                     "form_values": form,
+                    "action": "edit",
                 },
                 status_code=400,
             )
@@ -626,10 +831,17 @@ async def edit_job_submit(
     # --------------------------------------------------------
 
     job.title = title
-    job.description = description or None
+    job.description = description
     job.location = location or None
     job.status = status
     job.company_id = company_id
+    job.salary_min = salary_min
+    job.salary_max = salary_max
+    job.salary_currency = salary_currency
+
+    # --------------------------------------------------------
+    # Save
+    # --------------------------------------------------------
 
     try:
         db.commit()
@@ -657,16 +869,21 @@ async def edit_job_submit(
                 "current_user": current_user,
                 "error": error,
                 "form_values": form,
+                "action": "edit",
             },
             status_code=400,
         )
+
+    except Exception:
+        db.rollback()
+        raise
 
     # --------------------------------------------------------
     # Success
     # --------------------------------------------------------
 
     return RedirectResponse(
-        url=f"/jobs/{job.id}",
+        url="/jobs/",
         status_code=303,
     )
 
@@ -687,6 +904,12 @@ async def delete_job(
     """
     Soft-delete a job posting.
     """
+
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be logged in to delete a job.",
+        )
 
     job = (
         db.query(JobPosting)
