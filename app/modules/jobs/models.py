@@ -39,6 +39,13 @@ class JobPosting(Base, BaseModel):
         server_default="draft",
     )
 
+    salary_currency: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False,
+        default="USD",
+        server_default="USD",
+    )
+
     company_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey(
